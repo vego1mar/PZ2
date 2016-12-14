@@ -58,7 +58,7 @@ namespace WebCrawler
                 appName = appName.Substring(appName.LastIndexOf('\\') + 1);
                 Console.Error.WriteLine("=============================================");
                 Console.Error.WriteLine("Error log for {0}", appName);
-                Console.Error.WriteLine("Timestamp: {0}", DateTime.UtcNow);
+                Console.Error.WriteLine("Timestamp: {0}", DateTime.Today + " " + DateTime.Now);
                 Console.Error.WriteLine("=============================================");
                 }
             catch ( UnauthorizedAccessException x ) {
@@ -235,6 +235,7 @@ namespace WebCrawler
 
             // Proceed with crawling.
             this.currentStateToUpdateLabel.Text = "Pending";
+            this.currentStateToUpdateLabel.Refresh();
             this.crawlThroughTheSite( content, phrase, levelOfDepth );
 
             // Switch the 'Proceed' button to active again.
@@ -328,9 +329,37 @@ namespace WebCrawler
             uint i = 0;
 
             // Download every page of absolute links founded.
-            foreach ( var urlEntry in absoluteLinks0 ) {
-                string currentSiteContent = connection1.DownloadString( urlEntry );
-                sitesContent1[i++] = currentSiteContent;
+            while ( i < absoluteLinks0.Count ) {
+                foreach ( var urlEntry in absoluteLinks0 ) {
+                    if ( i >= absoluteLinks0.Count ) {
+                        break;
+                        }
+
+                    string currentSiteContent = "";
+
+                    try {
+                        currentSiteContent = connection1.DownloadString(urlEntry);
+                        }
+                    catch ( ArgumentNullException x ) {
+                        Console.Error.WriteLineAsync("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
+                        continue;
+                        }
+                    catch ( WebException x ) {
+                        Console.Error.WriteLineAsync("[2] WebException: " + x.Message + " urlEntry=" + urlEntry);
+                        continue;
+                        }
+                    catch ( NotSupportedException x ) {
+                        Console.Error.WriteLineAsync("[2] NotSupportedException: " + x.Message + " urlEntry=" + urlEntry);
+                        continue;
+                        }
+                    catch ( Exception x ) {
+                        Console.Error.WriteLineAsync("[2] Exception: " + x.Message + " urlEntry=" + urlEntry);
+                        continue;
+                        }
+
+                    sitesContent1[i] = currentSiteContent;
+                    i++;
+                    }
                 }
 
             i = 0;
@@ -357,9 +386,12 @@ namespace WebCrawler
             Regex regexLink = new Regex("(?<=<a\\s*?href=(?:'|\"))[^'\"]*?(?=(?:'|\"))");
             ISet<string> newLinks = new HashSet<string>();
 
-            foreach ( var match in regexLink.Matches( content ) ) {
-                if ( newLinks.Contains( match.ToString() ) == false ) {
-                    newLinks.Add( match.ToString() );
+            // Preventing an ArgumentNullException raising for pages that returned an Exception.
+            if ( content != null ) {
+                foreach ( var match in regexLink.Matches( content ) ) {
+                    if ( newLinks.Contains( match.ToString() ) == false ) {
+                        newLinks.Add( match.ToString() );
+                        }
                     }
                 }
 
