@@ -13,8 +13,6 @@ namespace WebCrawler
     public partial class MainWindow : Form
         {
 
-        private uint secondsForProceedTimer;
-        private uint minutesForProceedTimer;
         private uint foundedLinksCounter;
         private TextWriter stdErrStream;
 
@@ -28,8 +26,6 @@ namespace WebCrawler
             InitializeComponent();
 
             // Touch the fields.
-            this.secondsForProceedTimer = 0;
-            this.minutesForProceedTimer = 0;
             this.foundedLinksCounter = 0;
             this.stdErrStream = null;
             }
@@ -121,8 +117,6 @@ namespace WebCrawler
         private void MainWindow_Load(object sender, EventArgs e)
             {
             this.tryToRedirectStdErr();
-            this.proceedTimer.Enabled = true;
-            this.proceedTimer.Start();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -140,9 +134,6 @@ namespace WebCrawler
                 Console.Error.WriteLine();
                 this.stdErrStream.Close();
                 }
-
-            this.proceedTimer.Enabled = false;
-            this.proceedTimer.Stop();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -154,95 +145,140 @@ namespace WebCrawler
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
         private void proceedButton_Click( object sender, EventArgs e )
             {
-            // Preparing the fields.
-            this.minutesForProceedTimer = 0;
-            this.secondsForProceedTimer = 0;
             this.foundedLinksCounter = 0;
-            
-            // Change the 'Proceed' button to an unavailable one.
-            //this.proceedTimer.Enabled = true;
-            //this.proceedTimer.Start();
-            this.proceedButton.Enabled = false;
-            this.currentStateToUpdateLabel.Text = "Preparing";
             this.foundedLinksToUpdateLabel.Text = "0";
+            this.disableMainWindowControls( "Pending" );
 
-            // Get the website URL from the text box.
-            string websiteURL = this.websiteURLTextBox.Text;
-
-            // Validate website URL given from the user as HTTP or HTTPS URI.
-            if ( this.isURLvalid( websiteURL ) == false ) {
-                MessageBox.Show(this, "The URL scheme has not been found.\nUse absolute path of \"http://www.\"", "URL scheme validation");
-                this.proceedButton.Enabled = true;
-                this.currentStateToUpdateLabel.Text = "Returned";
-                //this.proceedTimer.Stop();
+            if ( this.isInputtedTextValidURL() == false ) {
                 return;
                 }
 
-            // Probe the given URL by opening a connection.
-            string content = null;
+            string websiteContent = null;
+            this.probeWebConnectionHavingTypedURL( out websiteContent );
+
+            if ( websiteContent == null ) {
+                return;
+                }
+
+            uint levelOfDepth = this.retrieveTheStateOfSelectedRadioButtonLevel();
+            this.currentStateToUpdateLabel.Text = "Working";
+            this.currentStateToUpdateLabel.Refresh();
+            this.crawlThroughTheSite( websiteContent, levelOfDepth );
+            this.enableMainWindowControls( "Done" );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Try to establish a network connection having the typed URL. On successful the external data will be changed.
+        /// </summary>
+        /// <param name="websiteContent">A simple data type for external change on successful connection established.</param>
+
+        private void probeWebConnectionHavingTypedURL( out string websiteContent )
+            {
+            websiteContent = null;
 
             try {
                 WebClient website = new WebClient();
-                content = website.DownloadString( websiteURL );
+                websiteContent = website.DownloadString( this.websiteURLTextBox.Text );
                 }
             catch ( ArgumentNullException x ) {
                 Console.Error.WriteLine("[1] ArgumentNullException: " + x.Message);
                 MessageBox.Show(this, "The 'address' parameter is null.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.proceedButton.Enabled = true;
-                this.currentStateToUpdateLabel.Text = "Returned";
-                //this.proceedTimer.Stop();
-                return;
+                this.enableMainWindowControls("ArgumentNullException on the typed URL");
                 }
             catch ( WebException x ) {
                 Console.Error.WriteLine("[1] WebException: " + x.Message);
                 MessageBox.Show(this, "The formed URI is invalid or an error occured while downloading the resource.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.proceedButton.Enabled = true;
-                this.currentStateToUpdateLabel.Text = "Returned";
-                //this.proceedTimer.Stop();
-                return;
+                this.enableMainWindowControls("WebException on the typed URL");
                 }
             catch ( NotSupportedException x ) {
                 Console.Error.WriteLine("[1] NotSupportedException: " + x.Message);
                 MessageBox.Show(this, "The method has been called simultaneously on multiple threads.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.proceedButton.Enabled = true;
-                this.currentStateToUpdateLabel.Text = "Returned";
-                //this.proceedTimer.Stop();
-                return;
+                this.enableMainWindowControls("NotSupportedException on the typed URL");
+                }
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Validate a website URL given from the user from the main window's text box as HTTP or HTTPS URI.
+        /// </summary>
+        /// <returns>true if text box text is a correct URI, false otherwise</returns>
+
+        private bool isInputtedTextValidURL()
+            {
+            string websiteURL = this.websiteURLTextBox.Text;
+
+            if ( this.isURLvalid( websiteURL ) == false ) {
+                MessageBox.Show(this, "The URL scheme has not been found.\nUse absolute path of \"http://www.\"", "URL scheme validation");
+                this.enableMainWindowControls("Unvalidated URL");
+                return ( false );
                 }
 
-            // Retrieve the state of selected level.
+            return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Disables controls on the main window after 'Proceed' button click.
+        /// </summary>
+        /// <param name="currentStateLabelText">A text that will be set to the 'Current state:' corresponding label.</param>
+
+        private void disableMainWindowControls( string currentStateLabelText )
+            {
+            this.proceedButton.Enabled = false;
+            this.websiteURLTextBox.Enabled = false;
+            this.level1RadioButton.Enabled = false;
+            this.level2RadioButton.Enabled = false;
+            this.level3RadioButton.Enabled = false;
+            this.currentStateToUpdateLabel.Text = currentStateLabelText;
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Enables controls on the main window when the 'Proceed' button operation will be finished.
+        /// </summary>
+        /// <param name="currentStateLabelText">A text that will be set to the 'Current state:' corresponding label.</param>
+
+
+        private void enableMainWindowControls( string currentStateLabelText )
+            {
+            this.proceedButton.Enabled = true;
+            this.websiteURLTextBox.Enabled = true;
+            this.level1RadioButton.Enabled = true;
+            this.level2RadioButton.Enabled = true;
+            this.level3RadioButton.Enabled = true;
+            this.currentStateToUpdateLabel.Text = currentStateLabelText;
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Retrieves the state of selected radio button with a 'Level' label.
+        /// This is a number from the set of { 1, 2, 3 }.
+        /// If none of the proper radio button is selected, then the default value of 1 ('Level 1') will be returned.
+        /// </summary>
+        /// <returns>A number representing the selected radio button in the GUI.</returns>
+
+        private uint retrieveTheStateOfSelectedRadioButtonLevel()
+            {
             bool level1 = this.level1RadioButton.Checked;
             bool level2 = this.level2RadioButton.Checked;
             bool level3 = this.level3RadioButton.Checked;
-            uint levelOfDepth = 0;
+
+            uint levelOfDepth = 1;
+
             levelOfDepth = (level1 == true) ? (1) : (levelOfDepth);
             levelOfDepth = (level2 == true) ? (2) : (levelOfDepth);
             levelOfDepth = (level3 == true) ? (3) : (levelOfDepth);
 
-            // Retrieve the phrase from the user.
-            string phrase = this.phraseToSearchForTextBox.Text;
-
-            if ( phrase == null || phrase == "" ) {
-                MessageBox.Show(this,"The given phrase to search for cannot be empty.","Phrase validation");
-                this.proceedButton.Enabled = true;
-                this.currentStateToUpdateLabel.Text = "Returned";
-                //this.proceedTimer.Stop();
-                return;
-                }
-
-            // Proceed with crawling.
-            this.currentStateToUpdateLabel.Text = "Pending";
-            this.currentStateToUpdateLabel.Refresh();
-            this.crawlThroughTheSite( content, phrase, levelOfDepth );
-
-            // Switch the 'Proceed' button to active again.
-            this.proceedButton.Enabled = true;
-            this.currentStateToUpdateLabel.Text = "Done";
-            //this.proceedTimer.Enabled = false;
-            //this.proceedTimer.Stop();
+            return ( levelOfDepth );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -271,33 +307,8 @@ namespace WebCrawler
             {
             Uri uriResult;
 
-            return ( Uri.TryCreate(source, UriKind.Absolute, out uriResult) && 
+            return ( Uri.TryCreate(source, UriKind.Absolute, out uriResult ) && 
                 (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps) );
-            }
-
-        //______________________________________________________________________________________________________________________________
-
-        /// <summary>
-        /// An action performed when the timer event is raised after 1 second.
-        /// </summary>
-        /// <param name="sender">The GUI component that cause the action.</param>
-        /// <param name="e">Arguments of the action related with the GUI sender component.</param>
-
-        private void proceedTimer_Tick( object sender, EventArgs e )
-            {
-            // Check current seconds and minutes.
-            if ( this.secondsForProceedTimer >= 59 ) { 
-                this.minutesForProceedTimer++;
-                this.secondsForProceedTimer = 0; 
-                }
-            else { 
-                this.secondsForProceedTimer++; 
-                }
-
-            // Construct the 'time' string and update GUI.
-            string timePulse = this.minutesForProceedTimer + " : " + this.secondsForProceedTimer;
-            this.elapsedTimeToUpdateLabel.Text = timePulse;
-            this.elapsedTimeToUpdateLabel.Refresh();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -305,40 +316,60 @@ namespace WebCrawler
         /// <summary>
         /// The given website crawling procedure. It searches for the occurencies of <a> tags.
         /// </summary>
-        /// <param name="content">The HTML content of the main website to be proceeded as a start page (level 0).</param>
-        /// <param name="phrase">A string that has been searched in the HTML web contents at all levels.</param>
+        /// <param name="websiteContent">The HTML content of the main website to be proceeded as a start page (level 0).</param>
         /// <param name="levelOfDepth">The level of depth for crawling. This should be a value from a set of {1,2,3}, 
         /// otherwise the default parameter of 1 will be assigned.</param>
 
-        private void crawlThroughTheSite( string content, string phrase, uint levelOfDepth )
+        private void crawlThroughTheSite( string websiteContent, uint levelOfDepth )
             {
-            // Validate the levelOfDepth argument.
-            if ( (levelOfDepth < 1) || (levelOfDepth > 3) ) {
-                levelOfDepth = 1;
-                }
-
             // LEVEL 0
             // Search for the links on the main site.
-            ISet<string> hrefLinks0 = this.getOnlyTheLinks( content );
+            ISet<string> hrefLinks0 = this.getOnlyTheLinks( websiteContent );
             ISet<string> absoluteLinks0 = this.retrieveAbsoluteLinks( hrefLinks0 );
 
             // LEVEL 1
-            WebClient connection1 = new WebClient();
-            string [] sitesContent1 = new string [ absoluteLinks0.Count ];
-            ISet<string> [] absoluteLinks1 = new HashSet<string>[ absoluteLinks0.Count ];
+            ISet<string>[] absoluteLinks1 = this.grabTheLinksFromGivenLinksSet( absoluteLinks0 );
+
+            // LEVEL 2
+            if ( levelOfDepth < 2 ) {
+                return;
+                }
+
+            ISet<string>[][] absoluteLinks2 = new ISet<string>[ absoluteLinks1.Rank ][];
+
+            for ( int i=0; i<absoluteLinks1.Rank; i++ ) {
+                ISet<string>[] currentAbsoluteLinks = this.grabTheLinksFromGivenLinksSet( absoluteLinks1[i] );
+                absoluteLinks2[i] = currentAbsoluteLinks;
+                }
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Downloads every HTML page from the passed set of URLs and traverses its content for retrieving the absolute links.
+        /// A non-blocking traversing operation with exceptions handling implementation is provided.
+        /// </summary>
+        /// <param name="absoluteLinks">A collection of absolute links to be probed by a web connection and downloaded.</param>
+        /// <returns>A collection array of absolute links retrieved from the URLs given as a parameter.</returns>
+
+        private ISet<string>[] grabTheLinksFromGivenLinksSet( ISet<string> absoluteLinks )
+            {
+            WebClient connection = new WebClient();
+            string[] sitesContent = new string[ absoluteLinks.Count ];
+            ISet<string>[] nextAbsoluteLinks = new HashSet<string>[ absoluteLinks.Count ];
             uint i = 0;
 
             // Download every page of absolute links founded.
-            while ( i < absoluteLinks0.Count ) {
-                foreach ( var urlEntry in absoluteLinks0 ) {
-                    if ( i >= absoluteLinks0.Count ) {
+            while ( i < absoluteLinks.Count ) {
+                foreach ( var urlEntry in absoluteLinks ) {
+                    if ( i >= absoluteLinks.Count ) {
                         break;
                         }
 
                     string currentSiteContent = "";
 
                     try {
-                        currentSiteContent = connection1.DownloadString(urlEntry);
+                        currentSiteContent = connection.DownloadString( urlEntry );
                         }
                     catch ( ArgumentNullException x ) {
                         Console.Error.WriteLineAsync("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
@@ -357,7 +388,7 @@ namespace WebCrawler
                         continue;
                         }
 
-                    sitesContent1[i] = currentSiteContent;
+                    sitesContent[i] = currentSiteContent;
                     i++;
                     }
                 }
@@ -365,11 +396,13 @@ namespace WebCrawler
             i = 0;
 
             // Traverse the site's downloaded content for retrieving the absolute links.
-            foreach ( var content1 in sitesContent1 ) {
-                ISet<string> currentHrefLinks1 = this.getOnlyTheLinks( content1 );
-                ISet<string> currentAbsoluteLinks1 = this.retrieveAbsoluteLinks( currentHrefLinks1 );
-                absoluteLinks1[i++] = currentAbsoluteLinks1;
+            foreach ( var content in sitesContent ) {
+                ISet<string> currentHrefLinks = this.getOnlyTheLinks( content );
+                ISet<string> currentAbsoluteLinks = this.retrieveAbsoluteLinks( currentHrefLinks );
+                nextAbsoluteLinks[i++] = currentAbsoluteLinks;
                 }
+
+            return ( nextAbsoluteLinks );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -386,7 +419,7 @@ namespace WebCrawler
             Regex regexLink = new Regex("(?<=<a\\s*?href=(?:'|\"))[^'\"]*?(?=(?:'|\"))");
             ISet<string> newLinks = new HashSet<string>();
 
-            // Preventing an ArgumentNullException raising for pages that returned an Exception.
+            // Preventing an ArgumentNullException raising using Regex.Matches() for pages that returned a WebException.
             if ( content != null ) {
                 foreach ( var match in regexLink.Matches( content ) ) {
                     if ( newLinks.Contains( match.ToString() ) == false ) {
