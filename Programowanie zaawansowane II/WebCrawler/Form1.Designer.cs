@@ -39,12 +39,14 @@
             this.level1RadioButton = new System.Windows.Forms.RadioButton();
             this.level2RadioButton = new System.Windows.Forms.RadioButton();
             this.level3RadioButton = new System.Windows.Forms.RadioButton();
+            this.infoButton = new System.Windows.Forms.Button();
+            this.level0Label = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // websiteURLLabel
             // 
             this.websiteURLLabel.AutoSize = true;
-            this.websiteURLLabel.Location = new System.Drawing.Point(49, 41);
+            this.websiteURLLabel.Location = new System.Drawing.Point(26, 41);
             this.websiteURLLabel.Name = "websiteURLLabel";
             this.websiteURLLabel.Size = new System.Drawing.Size(74, 13);
             this.websiteURLLabel.TabIndex = 0;
@@ -52,9 +54,9 @@
             // 
             // websiteURLTextBox
             // 
-            this.websiteURLTextBox.Location = new System.Drawing.Point(129, 38);
+            this.websiteURLTextBox.Location = new System.Drawing.Point(106, 38);
             this.websiteURLTextBox.Name = "websiteURLTextBox";
-            this.websiteURLTextBox.Size = new System.Drawing.Size(379, 20);
+            this.websiteURLTextBox.Size = new System.Drawing.Size(402, 20);
             this.websiteURLTextBox.TabIndex = 1;
             this.websiteURLTextBox.Text = "http://www.";
             // 
@@ -89,10 +91,10 @@
             // foundedLinksToUpdateLabel
             // 
             this.foundedLinksToUpdateLabel.AutoSize = true;
-            this.foundedLinksToUpdateLabel.Location = new System.Drawing.Point(438, 171);
-            this.foundedLinksToUpdateLabel.MinimumSize = new System.Drawing.Size(70, 15);
+            this.foundedLinksToUpdateLabel.Location = new System.Drawing.Point(258, 169);
+            this.foundedLinksToUpdateLabel.MinimumSize = new System.Drawing.Size(250, 15);
             this.foundedLinksToUpdateLabel.Name = "foundedLinksToUpdateLabel";
-            this.foundedLinksToUpdateLabel.Size = new System.Drawing.Size(70, 15);
+            this.foundedLinksToUpdateLabel.Size = new System.Drawing.Size(250, 15);
             this.foundedLinksToUpdateLabel.TabIndex = 11;
             this.foundedLinksToUpdateLabel.Text = "0";
             this.foundedLinksToUpdateLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -109,13 +111,14 @@
             // currentStateToUpdateLabel
             // 
             this.currentStateToUpdateLabel.AutoSize = true;
-            this.currentStateToUpdateLabel.Location = new System.Drawing.Point(438, 220);
-            this.currentStateToUpdateLabel.MinimumSize = new System.Drawing.Size(70, 15);
+            this.currentStateToUpdateLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.currentStateToUpdateLabel.Location = new System.Drawing.Point(258, 220);
+            this.currentStateToUpdateLabel.MinimumSize = new System.Drawing.Size(250, 15);
             this.currentStateToUpdateLabel.Name = "currentStateToUpdateLabel";
-            this.currentStateToUpdateLabel.Size = new System.Drawing.Size(70, 15);
+            this.currentStateToUpdateLabel.Size = new System.Drawing.Size(250, 15);
             this.currentStateToUpdateLabel.TabIndex = 13;
             this.currentStateToUpdateLabel.Text = "None";
-            this.currentStateToUpdateLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.currentStateToUpdateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // level1RadioButton
             // 
@@ -149,12 +152,33 @@
             this.level3RadioButton.Text = "Level III";
             this.level3RadioButton.UseVisualStyleBackColor = true;
             // 
+            // infoButton
+            // 
+            this.infoButton.Location = new System.Drawing.Point(25, 73);
+            this.infoButton.Name = "infoButton";
+            this.infoButton.Size = new System.Drawing.Size(75, 23);
+            this.infoButton.TabIndex = 19;
+            this.infoButton.Text = "Info";
+            this.infoButton.UseVisualStyleBackColor = true;
+            this.infoButton.Click += new System.EventHandler(this.InfoButton_Click);
+            // 
+            // level0Label
+            // 
+            this.level0Label.AutoSize = true;
+            this.level0Label.Location = new System.Drawing.Point(103, 22);
+            this.level0Label.Name = "level0Label";
+            this.level0Label.Size = new System.Drawing.Size(42, 13);
+            this.level0Label.TabIndex = 20;
+            this.level0Label.Text = "Level 0";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
             this.ClientSize = new System.Drawing.Size(550, 277);
+            this.Controls.Add(this.level0Label);
+            this.Controls.Add(this.infoButton);
             this.Controls.Add(this.level3RadioButton);
             this.Controls.Add(this.level2RadioButton);
             this.Controls.Add(this.level1RadioButton);
@@ -187,6 +211,8 @@
         private System.Windows.Forms.RadioButton level1RadioButton;
         private System.Windows.Forms.RadioButton level2RadioButton;
         private System.Windows.Forms.RadioButton level3RadioButton;
+        private System.Windows.Forms.Button infoButton;
+        private System.Windows.Forms.Label level0Label;
         }
     }
 

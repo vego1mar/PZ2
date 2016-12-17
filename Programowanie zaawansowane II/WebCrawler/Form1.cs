@@ -6,21 +6,27 @@ using System.Collections.Generic;
 using System.IO;
 
 /// <summary>
-/// A web crawler of searching for the phrase with three levels of depth at most.
+/// A simple web crawler with three levels of searching depth.
+/// It establishes only the HTTP connections and looking for only the absolute links (URIs).
+/// StdErr stream is redirected on main window load into a file whose name is defined in a constant STDERR_FILENAME.
 /// </summary>
+
 namespace WebCrawler
     {
     public partial class MainWindow : Form
         {
 
         private uint foundedLinksCounter;
+
         private TextWriter stdErrStream;
+        internal const string STDERR_FILENAME = "errlog.txt";
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
         /// Invokes InitializeComponent() method that is required for Designer support method.
         /// </summary>
+
         public MainWindow()
             {
             InitializeComponent();
@@ -33,7 +39,8 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// It tries to redirect standard error stream into a file "errlog.txt" (to append its content).
+        /// It tries to redirect standard error stream into a file whose name is defined in a constant STDERR_FILENAME.
+        /// The file stream is opening for append.
         /// This function is used every time when the main window is formed (loaded).
         /// </summary>
         /// <returns>true if function code has been traversed, false when any error occured</returns>
@@ -41,20 +48,18 @@ namespace WebCrawler
         private bool tryToRedirectStdErr()
             {
             try {
-                // Create a new stream for the file.
-                this.stdErrStream = new StreamWriter("errlog.txt", true);
+                this.stdErrStream = new StreamWriter( STDERR_FILENAME, true );
                 Console.SetError( this.stdErrStream );
 
                 if ( this.stdErrStream == null ) {
-                    return (false);
+                    return ( false );
                     }
 
-                // Write a header file.
                 string appName = typeof( WebCrawler.Program ).Assembly.Location;
                 appName = appName.Substring(appName.LastIndexOf('\\') + 1);
                 Console.Error.WriteLine("=============================================");
                 Console.Error.WriteLine("Error log for {0}", appName);
-                Console.Error.WriteLine("Timestamp: {0}", DateTime.Today + " " + DateTime.Now);
+                Console.Error.WriteLine("Timestamp: {0}", DateTime.Now);
                 Console.Error.WriteLine("=============================================");
                 }
             catch ( UnauthorizedAccessException x ) {
@@ -114,7 +119,7 @@ namespace WebCrawler
         /// <param name="sender">The GUI component that cause the action.</param>
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private void MainWindow_Load( object sender, EventArgs e )
             {
             this.tryToRedirectStdErr();
             }
@@ -143,40 +148,51 @@ namespace WebCrawler
         /// </summary>
         /// <param name="sender">The GUI component that cause the action.</param>
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
+
         private void proceedButton_Click( object sender, EventArgs e )
             {
             this.foundedLinksCounter = 0;
             this.foundedLinksToUpdateLabel.Text = "0";
-            this.disableMainWindowControls( "Pending" );
+            this.disableMainWindowControls();
+            this.setCurrentStateToUpdateLabelText( "Pending" );
 
             if ( this.isInputtedTextValidURL() == false ) {
+                this.setCurrentStateToUpdateLabelText("Unvalidated URL");
+                this.enableMainWindowControls();
                 return;
                 }
 
             string websiteContent = null;
-            this.probeWebConnectionHavingTypedURL( out websiteContent );
+            string exceptionType = null;
+            this.probeWebConnectionHavingTypedURL( out websiteContent, out exceptionType );
 
             if ( websiteContent == null ) {
+                string currentStateLabelText = exceptionType + " on the typed URL";
+                this.setCurrentStateToUpdateLabelText( currentStateLabelText );
+                this.enableMainWindowControls();
                 return;
                 }
 
             uint levelOfDepth = this.retrieveTheStateOfSelectedRadioButtonLevel();
-            this.currentStateToUpdateLabel.Text = "Working";
-            this.currentStateToUpdateLabel.Refresh();
+            this.setCurrentStateToUpdateLabelText( "Working" );
             this.crawlThroughTheSite( websiteContent, levelOfDepth );
-            this.enableMainWindowControls( "Done" );
+            this.setCurrentStateToUpdateLabelText( "Done" );
+            this.enableMainWindowControls();
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
         /// Try to establish a network connection having the typed URL. On successful the external data will be changed.
+        /// At procedure start 'out' arguments are assigned to 'null'.
         /// </summary>
         /// <param name="websiteContent">A simple data type for external change on successful connection established.</param>
+        /// <param name="exceptionType">The type of the catched exception. If no catch have been made then 'null'.</param>
 
-        private void probeWebConnectionHavingTypedURL( out string websiteContent )
+        private void probeWebConnectionHavingTypedURL( out string websiteContent, out string exceptionType )
             {
             websiteContent = null;
+            exceptionType = null;
 
             try {
                 WebClient website = new WebClient();
@@ -186,19 +202,19 @@ namespace WebCrawler
                 Console.Error.WriteLine("[1] ArgumentNullException: " + x.Message);
                 MessageBox.Show(this, "The 'address' parameter is null.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.enableMainWindowControls("ArgumentNullException on the typed URL");
+                exceptionType = "ArgumentNullException";
                 }
             catch ( WebException x ) {
                 Console.Error.WriteLine("[1] WebException: " + x.Message);
                 MessageBox.Show(this, "The formed URI is invalid or an error occured while downloading the resource.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.enableMainWindowControls("WebException on the typed URL");
+                exceptionType = "WebException";
                 }
             catch ( NotSupportedException x ) {
                 Console.Error.WriteLine("[1] NotSupportedException: " + x.Message);
                 MessageBox.Show(this, "The method has been called simultaneously on multiple threads.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
-                this.enableMainWindowControls("NotSupportedException on the typed URL");
+                exceptionType = "NotSupportedException";
                 }
             }
 
@@ -215,7 +231,6 @@ namespace WebCrawler
 
             if ( this.isURLvalid( websiteURL ) == false ) {
                 MessageBox.Show(this, "The URL scheme has not been found.\nUse absolute path of \"http://www.\"", "URL scheme validation");
-                this.enableMainWindowControls("Unvalidated URL");
                 return ( false );
                 }
 
@@ -227,16 +242,14 @@ namespace WebCrawler
         /// <summary>
         /// Disables controls on the main window after 'Proceed' button click.
         /// </summary>
-        /// <param name="currentStateLabelText">A text that will be set to the 'Current state:' corresponding label.</param>
 
-        private void disableMainWindowControls( string currentStateLabelText )
+        private void disableMainWindowControls()
             {
             this.proceedButton.Enabled = false;
             this.websiteURLTextBox.Enabled = false;
             this.level1RadioButton.Enabled = false;
             this.level2RadioButton.Enabled = false;
             this.level3RadioButton.Enabled = false;
-            this.currentStateToUpdateLabel.Text = currentStateLabelText;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -244,17 +257,14 @@ namespace WebCrawler
         /// <summary>
         /// Enables controls on the main window when the 'Proceed' button operation will be finished.
         /// </summary>
-        /// <param name="currentStateLabelText">A text that will be set to the 'Current state:' corresponding label.</param>
 
-
-        private void enableMainWindowControls( string currentStateLabelText )
+        private void enableMainWindowControls()
             {
             this.proceedButton.Enabled = true;
             this.websiteURLTextBox.Enabled = true;
             this.level1RadioButton.Enabled = true;
             this.level2RadioButton.Enabled = true;
             this.level3RadioButton.Enabled = true;
-            this.currentStateToUpdateLabel.Text = currentStateLabelText;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -323,24 +333,49 @@ namespace WebCrawler
         private void crawlThroughTheSite( string websiteContent, uint levelOfDepth )
             {
             // LEVEL 0
+            this.setCurrentStateToUpdateLabelText("Working... Evaluating Level 0");
+
             // Search for the links on the main site.
             ISet<string> hrefLinks0 = this.getOnlyTheLinks( websiteContent );
             ISet<string> absoluteLinks0 = this.retrieveAbsoluteLinks( hrefLinks0 );
 
             // LEVEL 1
-            ISet<string>[] absoluteLinks1 = this.grabTheLinksFromGivenLinksSet( absoluteLinks0 );
+            this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 1" );
+            ISet<string>[] absoluteLinks1 = this.grabAbsoluteLinksFromContentOf( absoluteLinks0 );
 
             // LEVEL 2
             if ( levelOfDepth < 2 ) {
                 return;
                 }
 
+            this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 2" );
             ISet<string>[][] absoluteLinks2 = new ISet<string>[ absoluteLinks1.Rank ][];
+            int [] absoluteLinks2ArrayDimension2Lengths = new int [ absoluteLinks1.Rank ];
 
             for ( int i=0; i<absoluteLinks1.Rank; i++ ) {
-                ISet<string>[] currentAbsoluteLinks = this.grabTheLinksFromGivenLinksSet( absoluteLinks1[i] );
+                ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks1[i] );
                 absoluteLinks2[i] = currentAbsoluteLinks;
+                absoluteLinks2ArrayDimension2Lengths[i] += currentAbsoluteLinks.Length;
+                // TODO - check this addition for general correctness.
                 }
+
+            // LEVEL 3
+            if ( levelOfDepth < 3 ) {
+                return;
+                }
+
+            this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 3" );
+            ISet<string>[][][] absoluteLinks3 = new ISet<string>[ absoluteLinks2.Rank ][][];
+
+            for ( int i=0; i<absoluteLinks2.Rank; i++ ) {
+                for ( int j=0; j<absoluteLinks2ArrayDimension2Lengths[i]; j++ ) {
+                    ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks2[i][j] );
+                    absoluteLinks3[i][j] = currentAbsoluteLinks;
+                    // TODO - fix NullReferenceException here (dimensions)
+                    }
+                }
+
+            // TODO - saving websites content into a file
             }
 
         //______________________________________________________________________________________________________________________________
@@ -352,7 +387,7 @@ namespace WebCrawler
         /// <param name="absoluteLinks">A collection of absolute links to be probed by a web connection and downloaded.</param>
         /// <returns>A collection array of absolute links retrieved from the URLs given as a parameter.</returns>
 
-        private ISet<string>[] grabTheLinksFromGivenLinksSet( ISet<string> absoluteLinks )
+        private ISet<string>[] grabAbsoluteLinksFromContentOf( ISet<string> absoluteLinks )
             {
             WebClient connection = new WebClient();
             string[] sitesContent = new string[ absoluteLinks.Count ];
@@ -360,6 +395,8 @@ namespace WebCrawler
             uint i = 0;
 
             // Download every page of absolute links founded.
+            // This 'foreach' loop must stay in the body of 'while' loop.
+            // This ensure that 'foreach' loop will continue its work after returning from 'catch' block with non-altered iterator.
             while ( i < absoluteLinks.Count ) {
                 foreach ( var urlEntry in absoluteLinks ) {
                     if ( i >= absoluteLinks.Count ) {
@@ -452,6 +489,53 @@ namespace WebCrawler
                 }
 
             return ( absoluteLinks );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// An action performed when the 'Info' is clicked.
+        /// </summary>
+        /// <param name="sender">The GUI component that cause the action.</param>
+        /// <param name="e">Arguments of the action related with the GUI sender component.</param>
+
+        private void InfoButton_Click( object sender, EventArgs e )
+            {
+            string newLine = Environment.NewLine;
+            bool isStdErrRedirectedSuccessfully = ( this.stdErrStream == null ) ? ( false ) : ( true );
+            string appPath = typeof( WebCrawler.Program ).Assembly.Location;
+            string usedFramework = typeof( string ).Assembly.ImageRuntimeVersion;
+            string osInfo = Environment.OSVersion.VersionString;
+            bool x64Process = Environment.Is64BitProcess;
+            int currentManagedThreadID = Environment.CurrentManagedThreadId;
+
+            string msgBoxText = "A simple web crawler with three levels of searching depth." + newLine +
+                "It establishes only the HTTP connections and looking for only the absolute links (URIs)." + newLine +
+                newLine +
+                "StdErr stream redirected: " + isStdErrRedirectedSuccessfully + newLine +
+                "StdErr file name: " + STDERR_FILENAME + newLine +
+                newLine +
+                "Application path: " + appPath + newLine +
+                ".NET Framework: " + usedFramework + newLine +
+                "Operating system: " + osInfo + newLine +
+                "64-bit process: " + x64Process + newLine +
+                "Current managed thread ID: " + currentManagedThreadID + newLine;
+
+            MessageBox.Show( this, msgBoxText, "Information" );
+            // TODO - custom message box
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Sets the name corresponding component text by a passed argument value and refreshes the GUI main window.
+        /// </summary>
+        /// <param name="labelText">Text of the name corresponding label to set. Use of 'null' here is discouraged.</param>
+
+        private void setCurrentStateToUpdateLabelText( string labelText )
+            {
+            this.currentStateToUpdateLabel.Text = labelText;
+            this.currentStateToUpdateLabel.Refresh();
             }
 
         //______________________________________________________________________________________________________________________________
