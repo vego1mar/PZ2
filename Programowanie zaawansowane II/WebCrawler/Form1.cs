@@ -356,7 +356,6 @@ namespace WebCrawler
                 ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks1[i] );
                 absoluteLinks2[i] = currentAbsoluteLinks;
                 absoluteLinks2ArrayDimension2Lengths[i] += currentAbsoluteLinks.Length;
-                // TODO - check this addition for general correctness.
                 }
 
             // LEVEL 3
@@ -368,14 +367,22 @@ namespace WebCrawler
             ISet<string>[][][] absoluteLinks3 = new ISet<string>[ absoluteLinks2.Rank ][][];
 
             for ( int i=0; i<absoluteLinks2.Rank; i++ ) {
+                // The 'new' keyword is used in this block to prevent from raising a NullReferenceException.
+                absoluteLinks3[i] = new ISet<string>[ absoluteLinks2ArrayDimension2Lengths[i] ][];
+
                 for ( int j=0; j<absoluteLinks2ArrayDimension2Lengths[i]; j++ ) {
                     ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks2[i][j] );
+
+                    for ( int k=0; k<absoluteLinks2ArrayDimension2Lengths[i]; k++ ) {
+                        absoluteLinks3[i][k] = new ISet<string>[ currentAbsoluteLinks.Length ];
+                        }
+
                     absoluteLinks3[i][j] = currentAbsoluteLinks;
-                    // TODO - fix NullReferenceException here (dimensions)
                     }
                 }
 
             // TODO - saving websites content into a file
+            // TODO - test level 3 loops complete execution
             }
 
         //______________________________________________________________________________________________________________________________
