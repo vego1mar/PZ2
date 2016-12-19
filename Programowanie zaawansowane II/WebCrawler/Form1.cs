@@ -21,6 +21,9 @@ namespace WebCrawler
         private TextWriter stdErrStream;
         internal const string STDERR_FILENAME = "errlog.txt";
 
+        private string applicationPath;
+        internal const string ROOT_DIRECTORY_NAME = "web";
+
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
@@ -34,6 +37,7 @@ namespace WebCrawler
             // Touch the fields.
             this.foundedLinksCounter = 0;
             this.stdErrStream = null;
+            this.applicationPath = null;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -56,7 +60,9 @@ namespace WebCrawler
                     }
 
                 string appName = typeof( WebCrawler.Program ).Assembly.Location;
+                this.applicationPath = appName;
                 appName = appName.Substring(appName.LastIndexOf('\\') + 1);
+                Console.Error.WriteLine();
                 Console.Error.WriteLine("=============================================");
                 Console.Error.WriteLine("Error log for {0}", appName);
                 Console.Error.WriteLine("Timestamp: {0}", DateTime.Now);
@@ -216,6 +222,12 @@ namespace WebCrawler
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
                 exceptionType = "NotSupportedException";
                 }
+            catch ( Exception x ) {
+                Console.Error.WriteLine("[1] Exception: " + x.Message);
+                MessageBox.Show(this, "The general exception has been raised.", "Exception during URL probing");
+                MessageBox.Show(this, x.Message, "Exception during URL probing");
+                exceptionType = "Exception";
+                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -333,7 +345,20 @@ namespace WebCrawler
         private void crawlThroughTheSite( string websiteContent, uint levelOfDepth )
             {
             // LEVEL 0
-            this.setCurrentStateToUpdateLabelText("Working... Evaluating Level 0");
+            this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 0" );
+            string crawlingRootDirectory = this.createCrawlingRootDirectory();
+            bool isRootDirectoryCreated = this.validateDirectoryCreation( crawlingRootDirectory );
+
+            if ( isRootDirectoryCreated == false ) {
+                return;
+                }
+
+            int firstFullStopIndex = this.websiteURLTextBox.Text.IndexOf( '.' );
+            string mainPageName = this.websiteURLTextBox.Text.Substring( firstFullStopIndex + 1 );
+            string mainPageDirectory = Path.Combine( crawlingRootDirectory, mainPageName );
+            mainPageDirectory = this.removeWindowsFileSystemReservedCharacters( mainPageDirectory );
+            this.createDirectory( mainPageDirectory );
+            this.saveWebSiteContentTo( mainPageDirectory, mainPageName, websiteContent );
 
             // Search for the links on the main site.
             ISet<string> hrefLinks0 = this.getOnlyTheLinks( websiteContent );
@@ -341,7 +366,17 @@ namespace WebCrawler
 
             // LEVEL 1
             this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 1" );
-            ISet<string>[] absoluteLinks1 = this.grabAbsoluteLinksFromContentOf( absoluteLinks0 );
+            string [] contentOfAbsoluteLinks0;
+            ISet<string>[] absoluteLinks1 = this.grabAbsoluteLinksFromContentOf( absoluteLinks0, out contentOfAbsoluteLinks0 );
+            string level0LinksPath = Path.Combine( mainPageDirectory, "lvl_0" );
+            this.createDirectory( level0LinksPath );
+            this.setCurrentStateToUpdateLabelText( "Working... Saving Level 0" );
+            Console.Error.Flush();
+
+            for ( uint i=0; i<contentOfAbsoluteLinks0.Length; i++ ) {
+                string currentFileName = i.ToString();
+                this.saveWebSiteContentTo( level0LinksPath, currentFileName, contentOfAbsoluteLinks0[i] );
+                }
 
             // LEVEL 2
             if ( levelOfDepth < 2 ) {
@@ -351,11 +386,22 @@ namespace WebCrawler
             this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 2" );
             ISet<string>[][] absoluteLinks2 = new ISet<string>[ absoluteLinks1.Rank ][];
             int [] absoluteLinks2ArrayDimension2Lengths = new int [ absoluteLinks1.Rank ];
+            string level1LinksPath = Path.Combine( mainPageDirectory, "lvl_1" );
+            this.createDirectory( level1LinksPath );
 
             for ( int i=0; i<absoluteLinks1.Rank; i++ ) {
-                ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks1[i] );
+                this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 2" );
+                string [] contentOfAbsoluteLinks1;
+                ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks1[i], out contentOfAbsoluteLinks1 );
                 absoluteLinks2[i] = currentAbsoluteLinks;
                 absoluteLinks2ArrayDimension2Lengths[i] += currentAbsoluteLinks.Length;
+                this.setCurrentStateToUpdateLabelText( "Working... Saving Level 1" );
+                Console.Error.Flush();
+
+                for ( uint j=0; j<contentOfAbsoluteLinks1.Length; j++ ) {
+                    string currentFileName = i + "-" + j;
+                    this.saveWebSiteContentTo( level1LinksPath, currentFileName, contentOfAbsoluteLinks1[j] );
+                    }
                 }
 
             // LEVEL 3
@@ -365,23 +411,65 @@ namespace WebCrawler
 
             this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 3" );
             ISet<string>[][][] absoluteLinks3 = new ISet<string>[ absoluteLinks2.Rank ][][];
+            string level2LinksPath = Path.Combine( mainPageDirectory, "lvl_2" );
+            this.createDirectory( level2LinksPath );
 
             for ( int i=0; i<absoluteLinks2.Rank; i++ ) {
                 // The 'new' keyword is used in this block to prevent from raising a NullReferenceException.
                 absoluteLinks3[i] = new ISet<string>[ absoluteLinks2ArrayDimension2Lengths[i] ][];
 
                 for ( int j=0; j<absoluteLinks2ArrayDimension2Lengths[i]; j++ ) {
-                    ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks2[i][j] );
+                    this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 3" );
+                    string [] contentOfAbsoluteLinks2;
+                    ISet<string>[] currentAbsoluteLinks = this.grabAbsoluteLinksFromContentOf( absoluteLinks2[i][j], out contentOfAbsoluteLinks2 );
 
                     for ( int k=0; k<absoluteLinks2ArrayDimension2Lengths[i]; k++ ) {
                         absoluteLinks3[i][k] = new ISet<string>[ currentAbsoluteLinks.Length ];
                         }
 
                     absoluteLinks3[i][j] = currentAbsoluteLinks;
+                    this.setCurrentStateToUpdateLabelText( "Working... Saving Level 2" );
+                    Console.Error.Flush();
+
+                    for ( uint k=0; k<contentOfAbsoluteLinks2.Length; k++ ) {
+                        string currentFileName = i + "-" + j + "-" + k;
+                        this.saveWebSiteContentTo( level2LinksPath, currentFileName, contentOfAbsoluteLinks2[k] );
+                        }
                     }
                 }
 
-            // TODO - saving websites content into a file
+            // Only websites content saving is revelant here. Retrieving the absolute links is obsolete and consume CPU and memory.
+            string level3LinksPath = Path.Combine( mainPageDirectory, "lvl_3" );
+            this.createDirectory( level3LinksPath );
+            this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3" );
+            int iSet = -1;
+            int jSubset = -1;
+            int kCollection = -1;
+
+            foreach ( var set in absoluteLinks3 ) {
+                iSet++;
+                this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (I)... " + iSet );
+
+                foreach ( var subset in set ) {
+                    jSubset++;
+                    this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (II)... " + jSubset );
+
+                    foreach ( var collection in subset ) {
+                        kCollection++;
+                        this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (III)... " + kCollection );
+                        string [] contentOfCurrentAbsoluteLinks;
+                        this.grabAbsoluteLinksFromContentOf( collection, out contentOfCurrentAbsoluteLinks );
+                        Console.Error.Flush();
+
+                        for ( uint l=0; l<contentOfCurrentAbsoluteLinks.Length; l++ ) {
+                            this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (IV)... " + l );
+                            string currentFileName = iSet + "-" + jSubset + "-" + kCollection + "-" + l;
+                            this.saveWebSiteContentTo( level3LinksPath, currentFileName, contentOfCurrentAbsoluteLinks[l] );
+                            }
+                        }
+                    }
+                }
+
             // TODO - test level 3 loops complete execution
             }
 
@@ -392,9 +480,10 @@ namespace WebCrawler
         /// A non-blocking traversing operation with exceptions handling implementation is provided.
         /// </summary>
         /// <param name="absoluteLinks">A collection of absolute links to be probed by a web connection and downloaded.</param>
+        /// <param name="contentOfAbsoluteLinks">The content from passed absolute links saved in an external array.</param>
         /// <returns>A collection array of absolute links retrieved from the URLs given as a parameter.</returns>
 
-        private ISet<string>[] grabAbsoluteLinksFromContentOf( ISet<string> absoluteLinks )
+        private ISet<string>[] grabAbsoluteLinksFromContentOf( ISet<string> absoluteLinks, out string[] contentOfAbsoluteLinks )
             {
             WebClient connection = new WebClient();
             string[] sitesContent = new string[ absoluteLinks.Count ];
@@ -416,19 +505,19 @@ namespace WebCrawler
                         currentSiteContent = connection.DownloadString( urlEntry );
                         }
                     catch ( ArgumentNullException x ) {
-                        Console.Error.WriteLineAsync("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
+                        Console.Error.WriteLine("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( WebException x ) {
-                        Console.Error.WriteLineAsync("[2] WebException: " + x.Message + " urlEntry=" + urlEntry);
+                        Console.Error.WriteLine("[2] WebException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( NotSupportedException x ) {
-                        Console.Error.WriteLineAsync("[2] NotSupportedException: " + x.Message + " urlEntry=" + urlEntry);
+                        Console.Error.WriteLine("[2] NotSupportedException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( Exception x ) {
-                        Console.Error.WriteLineAsync("[2] Exception: " + x.Message + " urlEntry=" + urlEntry);
+                        Console.Error.WriteLine("[2] Exception: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
 
@@ -437,6 +526,7 @@ namespace WebCrawler
                     }
                 }
 
+            contentOfAbsoluteLinks = sitesContent;
             i = 0;
 
             // Traverse the site's downloaded content for retrieving the absolute links.
@@ -510,9 +600,7 @@ namespace WebCrawler
             {
             string newLine = Environment.NewLine;
             bool isStdErrRedirectedSuccessfully = ( this.stdErrStream == null ) ? ( false ) : ( true );
-            string appPath = typeof( WebCrawler.Program ).Assembly.Location;
             string usedFramework = typeof( string ).Assembly.ImageRuntimeVersion;
-            string osInfo = Environment.OSVersion.VersionString;
             bool x64Process = Environment.Is64BitProcess;
             int currentManagedThreadID = Environment.CurrentManagedThreadId;
 
@@ -522,9 +610,8 @@ namespace WebCrawler
                 "StdErr stream redirected: " + isStdErrRedirectedSuccessfully + newLine +
                 "StdErr file name: " + STDERR_FILENAME + newLine +
                 newLine +
-                "Application path: " + appPath + newLine +
+                "Application path: " + this.applicationPath + newLine +
                 ".NET Framework: " + usedFramework + newLine +
-                "Operating system: " + osInfo + newLine +
                 "64-bit process: " + x64Process + newLine +
                 "Current managed thread ID: " + currentManagedThreadID + newLine;
 
@@ -543,6 +630,178 @@ namespace WebCrawler
             {
             this.currentStateToUpdateLabel.Text = labelText;
             this.currentStateToUpdateLabel.Refresh();
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Creates a directory using passed path. This method come with an exception handling.
+        /// </summary>
+        /// <param name="path">An absolute path containing the directory name to create.</param>
+        /// <returns>'true' if the directory has been created, 'false' otherwise or when an Exception have been raised</returns>
+
+        private bool createDirectory( string path )
+            {
+            try {
+                Directory.CreateDirectory( path );
+                }
+            catch ( DirectoryNotFoundException x ) {
+                Console.Error.WriteLine( "[3] DirectoryNotFoundException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( PathTooLongException x ) {
+                Console.Error.WriteLine( "[3] PathTooLongException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( IOException x ) {
+                Console.Error.WriteLine( "[3] IOException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( UnauthorizedAccessException x ) {
+                Console.Error.WriteLine( "[3] UnauthorizedAccessException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( ArgumentNullException x ) {
+                Console.Error.WriteLine( "[3] ArgumentNullException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( ArgumentException x ) {
+                Console.Error.WriteLine( "[3] ArgumentException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( NotSupportedException x ) {
+                Console.Error.WriteLine( "[3] NotSupportedException: " + x.Message + " path=" + path );
+                return ( false );
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[3] Exception: " + x.Message + " path=" + path );
+                return ( false );
+                }
+
+            return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Creates the root directory for the crawled web pages using a directory name defined in a constant ROOT_DIRECTORY_NAME.
+        /// </summary>
+        /// <returns>A path of the crawling root directory on successful directory creation, 'null' otherwise</returns>
+
+        private string createCrawlingRootDirectory()
+            {
+            string path = null;
+            string rootDirectoryName = Path.GetDirectoryName( this.applicationPath );
+            string crawlingRootDirectory = Path.Combine( rootDirectoryName, ROOT_DIRECTORY_NAME );
+            bool isDirectoryCreated = this.createDirectory( crawlingRootDirectory );
+
+            if ( isDirectoryCreated == true ) {
+                path = crawlingRootDirectory;
+                }
+
+            return ( crawlingRootDirectory );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Validates the directory creation. On a negative result a MessageBox.Show() and a Console.Error.WriteLine() will be involved.
+        /// </summary>
+        /// <param name="path">A path with the directory to check.</param>
+        /// <returns>'true' if validation has been passed, 'false' otherwise</returns>
+
+        private bool validateDirectoryCreation( string path )
+            {
+            bool isDirectoryExisting = Directory.Exists( path );
+
+            if ( isDirectoryExisting == false ) {
+                string message = "The directory has not been created for a path=" + path;
+                Console.Error.WriteLine( message );
+                MessageBox.Show( this, message, "Directory creation failed" );
+                return ( false );
+                }
+
+            return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Removes all of the reserved in the Windows file system characters to an underscore ('_').
+        /// Please note that this method do not removes the reserved special file names, i.e. CON, COM0, LPT0, AUX, NUL, PRN etc.
+        /// </summary>
+        /// <param name="path">A path to be checked.</param>
+        /// <returns>Passed 'string' without Windows illegal paths and filenames characters.</returns>
+
+        private string removeWindowsFileSystemReservedCharacters( string path )
+            {
+            string validWindowsPath = path;
+            string regexSearch = new string( Path.GetInvalidFileNameChars() ) + new string( Path.GetInvalidPathChars() );
+            Regex regex = new Regex( string.Format("[{0}]", Regex.Escape( regexSearch )) );
+            path = regex.Replace( path, "" );
+
+            return ( validWindowsPath );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Save the given website content to the specified location with the specified name. The exception handling is provided.
+        /// </summary>
+        /// <param name="directoryName">The absolute directory name of the target location.</param>
+        /// <param name="filename">The name of the file.</param>
+        /// <param name="websiteContent">A content of the website to write into a file.</param>
+        /// <returns>'true' if IO operations have been done successfully, 'false' otherwise</returns>
+
+        private bool saveWebSiteContentTo( string directoryName, string filename, string websiteContent )
+            {
+            string partialErrorMessage = " directoryName=" + directoryName + " filename=" + filename;
+
+            try {
+                string path = Path.Combine( directoryName, filename );
+
+                using ( StreamWriter writer = File.CreateText( path ) ) { 
+                    writer.Write( websiteContent );
+                    }
+                }
+            catch ( UnauthorizedAccessException x ) {
+                Console.Error.WriteLine( "[4] UnauthorizedAccessException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( ArgumentNullException x ) {
+                Console.Error.WriteLine( "[4] ArgumentNullException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( ArgumentException x ) {
+                Console.Error.WriteLine( "[4] ArgumentException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( PathTooLongException x ) {
+                Console.Error.WriteLine( "[4] PathTooLongException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( DirectoryNotFoundException x ) {
+                Console.Error.WriteLine( "[4] DirectoryNotFoundException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( NotSupportedException x ) {
+                Console.Error.WriteLine( "[4] NotSupportedException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( ObjectDisposedException x ) {
+                Console.Error.WriteLine( "[4] ObjectDisposedException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( IOException x ) {
+                Console.Error.WriteLine( "[4] IOException: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[4] Exception: " + x.Message + partialErrorMessage );
+                return ( false );
+                }
+
+            return ( true );
             }
 
         //______________________________________________________________________________________________________________________________
