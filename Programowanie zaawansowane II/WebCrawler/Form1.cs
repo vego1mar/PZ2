@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// A simple web crawler with three levels of searching depth.
@@ -155,7 +157,7 @@ namespace WebCrawler
         /// <param name="sender">The GUI component that cause the action.</param>
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
 
-        private void proceedButton_Click( object sender, EventArgs e )
+        private async void proceedButton_Click( object sender, EventArgs e )
             {
             this.foundedLinksCounter = 0;
             this.foundedLinksToUpdateLabel.Text = "0";
@@ -181,7 +183,31 @@ namespace WebCrawler
 
             uint levelOfDepth = this.retrieveTheStateOfSelectedRadioButtonLevel();
             this.setCurrentStateToUpdateLabelText( "Working" );
-            this.crawlThroughTheSite( websiteContent, levelOfDepth );
+
+            // Do not encapsulate this block due to a GUI synchronization problem (refreshing).
+            // Task.Factory.StartNew() is simply entering a ThreadPool.
+            try {
+                await Task.Factory.StartNew( () => 
+                    this.crawlThroughTheSite( websiteContent, levelOfDepth ),  
+                    TaskCreationOptions.LongRunning
+                    );
+                }
+            catch ( ArgumentNullException x ) {
+                Console.Error.WriteLine( "[5] ArgumentNullException: " + x.Message );
+                this.setCurrentStateToUpdateLabelText( "ArgumentNullException while awaiting on Task" );
+                return;
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                Console.Error.WriteLine( "[5] ArgumentOutOfRangeException: " + x.Message );
+                this.setCurrentStateToUpdateLabelText( "ArgumentOutOfRangeException while awaiting on Task" );
+                return;
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[5] Exception: " + x.Message );
+                this.setCurrentStateToUpdateLabelText( "Exception while awaiting on Task" );
+                return;
+                }
+
             this.setCurrentStateToUpdateLabelText( "Done" );
             this.enableMainWindowControls();
             }
@@ -308,13 +334,25 @@ namespace WebCrawler
         /// <summary>
         /// A custom event of founded new link that should be noticed. Updates GUI main window.
         /// The change itself is an incremential one.
+        /// An exception handling is provided, but obsolete if Application.Exit() will not be used during threads-based processing.
         /// </summary>
 
         private void foundedLinksCount()
             {
-            this.foundedLinksCounter++;
-            this.foundedLinksToUpdateLabel.Text = this.foundedLinksCounter.ToString();
-            this.foundedLinksToUpdateLabel.Refresh();
+            // 'catch' block may be never reached because of Application.Exit().
+            try {
+                this.Invoke( ( MethodInvoker ) delegate {
+                    this.foundedLinksCounter++;
+                    this.foundedLinksToUpdateLabel.Text = this.foundedLinksCounter.ToString();
+                    this.foundedLinksToUpdateLabel.Refresh();
+                    });
+                }
+            catch ( ObjectDisposedException x ) {
+                Console.Error.WriteLine( "[7] ObjectDisposedException: " + x.Message );
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[7] Exception: " + x.Message );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -358,6 +396,12 @@ namespace WebCrawler
             string mainPageDirectory = Path.Combine( crawlingRootDirectory, mainPageName );
             mainPageDirectory = this.removeWindowsFileSystemReservedCharacters( mainPageDirectory );
             this.createDirectory( mainPageDirectory );
+            bool isMainPageDirectoryCreated = this.validateDirectoryCreation( mainPageDirectory );
+
+            if ( isMainPageDirectoryCreated == false ) {
+                return;
+                }
+
             this.saveWebSiteContentTo( mainPageDirectory, mainPageName, websiteContent );
 
             // Search for the links on the main site.
@@ -370,6 +414,12 @@ namespace WebCrawler
             ISet<string>[] absoluteLinks1 = this.grabAbsoluteLinksFromContentOf( absoluteLinks0, out contentOfAbsoluteLinks0 );
             string level0LinksPath = Path.Combine( mainPageDirectory, "lvl_0" );
             this.createDirectory( level0LinksPath );
+            bool isLevel0DirectoryCreated = this.validateDirectoryCreation( level0LinksPath );
+
+            if ( isLevel0DirectoryCreated == false ) {
+                return;
+                }
+
             this.setCurrentStateToUpdateLabelText( "Working... Saving Level 0" );
             Console.Error.Flush();
 
@@ -380,6 +430,7 @@ namespace WebCrawler
 
             // LEVEL 2
             if ( levelOfDepth < 2 ) {
+                // TODO - pages level saving correctness through directories and steps
                 return;
                 }
 
@@ -388,6 +439,11 @@ namespace WebCrawler
             int [] absoluteLinks2ArrayDimension2Lengths = new int [ absoluteLinks1.Rank ];
             string level1LinksPath = Path.Combine( mainPageDirectory, "lvl_1" );
             this.createDirectory( level1LinksPath );
+            bool isLevel1DirectoryCreated = this.validateDirectoryCreation( level1LinksPath );
+
+            if ( isLevel1DirectoryCreated == false ) {
+                return;
+                }
 
             for ( int i=0; i<absoluteLinks1.Rank; i++ ) {
                 this.setCurrentStateToUpdateLabelText( "Working... Evaluating Level 2" );
@@ -413,6 +469,11 @@ namespace WebCrawler
             ISet<string>[][][] absoluteLinks3 = new ISet<string>[ absoluteLinks2.Rank ][][];
             string level2LinksPath = Path.Combine( mainPageDirectory, "lvl_2" );
             this.createDirectory( level2LinksPath );
+            bool isLevel2DirectoryCreated = this.validateDirectoryCreation( level2LinksPath );
+
+            if ( isLevel2DirectoryCreated == false ) {
+                return;
+                }
 
             for ( int i=0; i<absoluteLinks2.Rank; i++ ) {
                 // The 'new' keyword is used in this block to prevent from raising a NullReferenceException.
@@ -441,6 +502,12 @@ namespace WebCrawler
             // Only websites content saving is revelant here. Retrieving the absolute links is obsolete and consume CPU and memory.
             string level3LinksPath = Path.Combine( mainPageDirectory, "lvl_3" );
             this.createDirectory( level3LinksPath );
+            bool isLevel3DirectoryCreated = this.validateDirectoryCreation( level3LinksPath );
+
+            if ( isLevel3DirectoryCreated == false ) {
+                return;
+                }
+
             this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3" );
             int iSet = -1;
             int jSubset = -1;
@@ -471,6 +538,7 @@ namespace WebCrawler
                 }
 
             // TODO - test level 3 loops complete execution
+            // TODO - add a timer on a new thread for the application instance?
             }
 
         //______________________________________________________________________________________________________________________________
@@ -480,14 +548,76 @@ namespace WebCrawler
         /// A non-blocking traversing operation with exceptions handling implementation is provided.
         /// </summary>
         /// <param name="absoluteLinks">A collection of absolute links to be probed by a web connection and downloaded.</param>
-        /// <param name="contentOfAbsoluteLinks">The content from passed absolute links saved in an external array.</param>
+        /// <param name="contentOfAbsoluteLinks">The content from passed absolute links saved in an external array. It is nullified at start.</param>
         /// <returns>A collection array of absolute links retrieved from the URLs given as a parameter.</returns>
 
         private ISet<string>[] grabAbsoluteLinksFromContentOf( ISet<string> absoluteLinks, out string[] contentOfAbsoluteLinks )
             {
-            WebClient connection = new WebClient();
             string[] sitesContent = new string[ absoluteLinks.Count ];
             ISet<string>[] nextAbsoluteLinks = new HashSet<string>[ absoluteLinks.Count ];
+            contentOfAbsoluteLinks = null;
+            Thread joinedWorkThread;
+
+            try {
+                joinedWorkThread = new Thread( () =>
+                    this.downloadWebPagesFromGivenAbsoluteLinks( ref absoluteLinks, ref sitesContent )
+                    );
+
+                joinedWorkThread.Start();
+                joinedWorkThread.Join();
+                contentOfAbsoluteLinks = sitesContent;
+
+                joinedWorkThread = new Thread( () =>
+                    this.traverseContentForRetrievingAbsoluteLinks( sitesContent, ref nextAbsoluteLinks )
+                    );
+
+                joinedWorkThread.Start();
+                joinedWorkThread.Join();
+                }
+            catch ( ArgumentNullException x ) {
+                Console.Error.WriteLine( "[6] ArgumentNullException: " + x.Message + "Critical error" );
+                MessageBox.Show( null, "ArgumentNullException while working on threads. Returning all control paths.", "Critical error" );
+                Application.Exit();
+                }
+            catch ( ThreadStateException x ) {
+                Console.Error.WriteLine( "[6] ThreadStateException: " + x.Message + "Critical error" );
+                MessageBox.Show( null, "ThreadStateException while working on threads. Returning all control paths.", "Critical error" );
+                Application.Exit();
+                }
+            catch ( OutOfMemoryException x ) {
+                Console.Error.WriteLine( "[6] OutOfMemoryException: " + x.Message + "Critical error" );
+                MessageBox.Show( null, "OutOfMemoryException while working on threads. Returning all control paths.", "Critical error" );
+                Application.Exit();
+                }
+            catch ( ThreadInterruptedException x ) {
+                Console.Error.WriteLine( "[6] ThreadInterruptedException: " + x.Message + "Critical error" );
+                MessageBox.Show( null, "ThreadInterruptedException while working on threads. Returning all control paths.", "Critical error" );
+                Application.Exit();
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[6] Exception: " + x.Message + "Critical error" );
+                MessageBox.Show( null, "Exception while working on threads. Returning all control paths.", "Critical error" );
+                Application.Exit();
+                }
+
+            return ( nextAbsoluteLinks );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// A procedure designed for the internal use in the method ::grabAbsoluteLinksFromContentOf().
+        /// It should be used only for defining a thread function body.
+        /// Downloads every web page of absolute links founded and passed as an argument.
+        /// </summary>
+        /// <param name="absoluteLinks">A bare bone collection of URLs for network probing.
+        /// It is a reference, because it has already been passed to the caller-method ::grabAbsoluteLinksFromContentOf().</param>
+        /// <param name="sitesContent">The downloaded content of web pages located through URLs in collection from the passed argument.
+        /// This parameter is for the external use.</param>
+
+        private void downloadWebPagesFromGivenAbsoluteLinks( ref ISet<string> absoluteLinks, ref string[] sitesContent )
+            {
+            WebClient connection = new WebClient();
             uint i = 0;
 
             // Download every page of absolute links founded.
@@ -525,18 +655,27 @@ namespace WebCrawler
                     i++;
                     }
                 }
+            }
 
-            contentOfAbsoluteLinks = sitesContent;
-            i = 0;
+        //______________________________________________________________________________________________________________________________
 
-            // Traverse the site's downloaded content for retrieving the absolute links.
+        /// <summary>
+        /// A procedure designed for the internal use in the method ::grabAbsoluteLinksFromContentOf().
+        /// It should be used only for defining a thread function body.
+        /// Traverses the site's downloaded contents for retrieving the absolute links.
+        /// </summary>
+        /// <param name="sitesContent">The downloaded content of web pages located through URLs.</param>
+        /// <param name="nextAbsoluteLinks">A bare bone collection for the result that will be externally passed.</param>
+
+        private void traverseContentForRetrievingAbsoluteLinks( string[] sitesContent, ref ISet<string>[] nextAbsoluteLinks )
+            {
+            uint i = 0;
+
             foreach ( var content in sitesContent ) {
                 ISet<string> currentHrefLinks = this.getOnlyTheLinks( content );
                 ISet<string> currentAbsoluteLinks = this.retrieveAbsoluteLinks( currentHrefLinks );
                 nextAbsoluteLinks[i++] = currentAbsoluteLinks;
                 }
-
-            return ( nextAbsoluteLinks );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -623,13 +762,25 @@ namespace WebCrawler
 
         /// <summary>
         /// Sets the name corresponding component text by a passed argument value and refreshes the GUI main window.
+        /// An exception handling is provided, but obsolete if Application.Exit() will not be used during threads-based processing.
         /// </summary>
         /// <param name="labelText">Text of the name corresponding label to set. Use of 'null' here is discouraged.</param>
 
         private void setCurrentStateToUpdateLabelText( string labelText )
             {
-            this.currentStateToUpdateLabel.Text = labelText;
-            this.currentStateToUpdateLabel.Refresh();
+            // 'catch' block may be never reached because of Application.Exit().       
+            try {
+                this.Invoke( ( MethodInvoker ) delegate {
+                    this.currentStateToUpdateLabel.Text = labelText;
+                    this.currentStateToUpdateLabel.Refresh();
+                    });
+                }
+            catch ( ObjectDisposedException x ) {
+                Console.Error.WriteLine( "[8] ObjectDisposedException: " + x.Message );
+                }
+            catch ( Exception x ) {
+                Console.Error.WriteLine( "[8] Exception: " + x.Message );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
