@@ -18,13 +18,15 @@ namespace WebCrawler
     public partial class MainWindow : Form
         {
 
-        private uint foundedLinksCounter;
+        private ulong foundedLinksCounter;
 
         private TextWriter stdErrStream;
         internal const string STDERR_FILENAME = "errlog.txt";
 
         private string applicationPath;
         internal const string ROOT_DIRECTORY_NAME = "web";
+
+        Thread timerThread;
 
         //______________________________________________________________________________________________________________________________
 
@@ -36,10 +38,13 @@ namespace WebCrawler
             {
             InitializeComponent();
 
-            // Touch the fields.
             this.foundedLinksCounter = 0;
             this.stdErrStream = null;
-            this.applicationPath = null;
+            this.applicationPath = string.Empty;
+            this.timerThread = null;
+
+            this.defineThreadWorkingUICounter();
+            this.timerThread.Start();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -64,54 +69,54 @@ namespace WebCrawler
                 string appName = typeof( WebCrawler.Program ).Assembly.Location;
                 this.applicationPath = appName;
                 appName = appName.Substring(appName.LastIndexOf('\\') + 1);
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("=============================================");
-                Console.Error.WriteLine("Error log for {0}", appName);
-                Console.Error.WriteLine("Timestamp: {0}", DateTime.Now);
-                Console.Error.WriteLine("=============================================");
+                this.writeLineToStdErr( Environment.NewLine );
+                this.writeLineToStdErr("=============================================");
+                this.writeLineToStdErr("Error log for: " + appName.ToString());
+                this.writeLineToStdErr("Timestamp: " + DateTime.Now.ToString());
+                this.writeLineToStdErr("=============================================");
                 }
             catch ( UnauthorizedAccessException x ) {
-                Console.Error.WriteLine("[0] UnauthorizedAccessException: " + x.Message);
+                this.writeLineToStdErr("[0] UnauthorizedAccessException: " + x.Message);
                 MessageBox.Show(this,x.Message,"Redirecting StdErr");
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
-                Console.Error.WriteLine("[0] NotSupportedException: " + x.Message);
+                this.writeLineToStdErr("[0] NotSupportedException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine("[0] ArgumentNullException: " + x.Message);
+                this.writeLineToStdErr("[0] ArgumentNullException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( ArgumentException x ) {
-                Console.Error.WriteLine("[0] ArgumentException: " + x.Message);
+                this.writeLineToStdErr("[0] ArgumentException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( DirectoryNotFoundException x ) {
-                Console.Error.WriteLine("[0] DirectoryNotFoundException: " + x.Message);
+                this.writeLineToStdErr("[0] DirectoryNotFoundException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( PathTooLongException x ) {
-                Console.Error.WriteLine("[0] PathTooLongException: " + x.Message);
+                this.writeLineToStdErr("[0] PathTooLongException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( IOException x ) {
-                Console.Error.WriteLine("[0] IOException: " + x.Message);
+                this.writeLineToStdErr("[0] IOException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( System.Security.SecurityException x ) {
-                Console.Error.WriteLine("[0] SecurityException: " + x.Message);
+                this.writeLineToStdErr("[0] SecurityException: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine("[0] Exception: " + x.Message);
+                this.writeLineToStdErr("[0] Exception: " + x.Message);
                 MessageBox.Show(this, x.Message, "Redirecting StdErr");
                 return ( false );
                 }
@@ -129,7 +134,25 @@ namespace WebCrawler
 
         private void MainWindow_Load( object sender, EventArgs e )
             {
-            this.tryToRedirectStdErr();
+            try { 
+                Thread redirectingStdErrThread = new Thread( () => {
+                    this.tryToRedirectStdErr();
+                    });
+
+                redirectingStdErrThread.Start();
+                }
+            catch ( ArgumentNullException x ) {
+                this.writeLineToStdErr( "[10] ArgumentNullException: " + x.Message + "object=redirectingStdErrThread" );
+                }
+            catch ( ThreadStateException x ) {
+                this.writeLineToStdErr( "[10] ThreadStateException: " + x.Message + "object=redirectingStdErrThread" );
+                }
+            catch ( OutOfMemoryException x ) {
+                this.writeLineToStdErr( "[10] OutOfMemoryException: " + x.Message + "object=redirectingStdErrThread" );
+                }
+            catch ( Exception x ) {
+                this.writeLineToStdErr( "[10] Exception: " + x.Message + "object=redirectingStdErrThread" );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -143,8 +166,7 @@ namespace WebCrawler
         private void MainWindow_FormClosed( object sender, FormClosedEventArgs e )
             {
             if ( this.stdErrStream != null ) {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine();
+                this.writeLineToStdErr( Environment.NewLine );
                 this.stdErrStream.Close();
                 }
             }
@@ -193,17 +215,17 @@ namespace WebCrawler
                     );
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine( "[5] ArgumentNullException: " + x.Message );
+                this.writeLineToStdErr( "[5] ArgumentNullException: " + x.Message );
                 this.setCurrentStateToUpdateLabelText( "ArgumentNullException while awaiting on Task" );
                 return;
                 }
             catch ( ArgumentOutOfRangeException x ) {
-                Console.Error.WriteLine( "[5] ArgumentOutOfRangeException: " + x.Message );
+                this.writeLineToStdErr( "[5] ArgumentOutOfRangeException: " + x.Message );
                 this.setCurrentStateToUpdateLabelText( "ArgumentOutOfRangeException while awaiting on Task" );
                 return;
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[5] Exception: " + x.Message );
+                this.writeLineToStdErr( "[5] Exception: " + x.Message );
                 this.setCurrentStateToUpdateLabelText( "Exception while awaiting on Task" );
                 return;
                 }
@@ -231,25 +253,25 @@ namespace WebCrawler
                 websiteContent = website.DownloadString( this.websiteURLTextBox.Text );
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine("[1] ArgumentNullException: " + x.Message);
+                this.writeLineToStdErr("[1] ArgumentNullException: " + x.Message);
                 MessageBox.Show(this, "The 'address' parameter is null.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
                 exceptionType = "ArgumentNullException";
                 }
             catch ( WebException x ) {
-                Console.Error.WriteLine("[1] WebException: " + x.Message);
+                this.writeLineToStdErr("[1] WebException: " + x.Message);
                 MessageBox.Show(this, "The formed URI is invalid or an error occured while downloading the resource.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
                 exceptionType = "WebException";
                 }
             catch ( NotSupportedException x ) {
-                Console.Error.WriteLine("[1] NotSupportedException: " + x.Message);
+                this.writeLineToStdErr("[1] NotSupportedException: " + x.Message);
                 MessageBox.Show(this, "The method has been called simultaneously on multiple threads.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
                 exceptionType = "NotSupportedException";
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine("[1] Exception: " + x.Message);
+                this.writeLineToStdErr("[1] Exception: " + x.Message);
                 MessageBox.Show(this, "The general exception has been raised.", "Exception during URL probing");
                 MessageBox.Show(this, x.Message, "Exception during URL probing");
                 exceptionType = "Exception";
@@ -339,7 +361,6 @@ namespace WebCrawler
 
         private void foundedLinksCount()
             {
-            // 'catch' block may be never reached because of Application.Exit().
             try {
                 this.Invoke( ( MethodInvoker ) delegate {
                     this.foundedLinksCounter++;
@@ -348,10 +369,10 @@ namespace WebCrawler
                     });
                 }
             catch ( ObjectDisposedException x ) {
-                Console.Error.WriteLine( "[7] ObjectDisposedException: " + x.Message );
+                this.writeLineToStdErr( "[7] ObjectDisposedException: " + x.Message );
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[7] Exception: " + x.Message );
+                this.writeLineToStdErr( "[7] Exception: " + x.Message );
                 }
             }
 
@@ -421,7 +442,6 @@ namespace WebCrawler
                 }
 
             this.setCurrentStateToUpdateLabelText( "Working... Saving Level 0" );
-            Console.Error.Flush();
 
             for ( uint i=0; i<contentOfAbsoluteLinks0.Length; i++ ) {
                 string currentFileName = i.ToString();
@@ -452,7 +472,6 @@ namespace WebCrawler
                 absoluteLinks2[i] = currentAbsoluteLinks;
                 absoluteLinks2ArrayDimension2Lengths[i] += currentAbsoluteLinks.Length;
                 this.setCurrentStateToUpdateLabelText( "Working... Saving Level 1" );
-                Console.Error.Flush();
 
                 for ( uint j=0; j<contentOfAbsoluteLinks1.Length; j++ ) {
                     string currentFileName = i + "-" + j;
@@ -490,7 +509,6 @@ namespace WebCrawler
 
                     absoluteLinks3[i][j] = currentAbsoluteLinks;
                     this.setCurrentStateToUpdateLabelText( "Working... Saving Level 2" );
-                    Console.Error.Flush();
 
                     for ( uint k=0; k<contentOfAbsoluteLinks2.Length; k++ ) {
                         string currentFileName = i + "-" + j + "-" + k;
@@ -526,7 +544,6 @@ namespace WebCrawler
                         this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (III)... " + kCollection );
                         string [] contentOfCurrentAbsoluteLinks;
                         this.grabAbsoluteLinksFromContentOf( collection, out contentOfCurrentAbsoluteLinks );
-                        Console.Error.Flush();
 
                         for ( uint l=0; l<contentOfCurrentAbsoluteLinks.Length; l++ ) {
                             this.setCurrentStateToUpdateLabelText( "Working... Saving Level 3 (IV)... " + l );
@@ -538,7 +555,8 @@ namespace WebCrawler
                 }
 
             // TODO - test level 3 loops complete execution
-            // TODO - add a timer on a new thread for the application instance?
+            // TODO - 'reset counter' button
+            // TODO - 'stop proceeding' button
             }
 
         //______________________________________________________________________________________________________________________________
@@ -575,27 +593,27 @@ namespace WebCrawler
                 joinedWorkThread.Join();
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine( "[6] ArgumentNullException: " + x.Message + "Critical error" );
+                this.writeLineToStdErr( "[6] ArgumentNullException: " + x.Message + "Critical error" );
                 MessageBox.Show( null, "ArgumentNullException while working on threads. Returning all control paths.", "Critical error" );
                 Application.Exit();
                 }
             catch ( ThreadStateException x ) {
-                Console.Error.WriteLine( "[6] ThreadStateException: " + x.Message + "Critical error" );
+                this.writeLineToStdErr( "[6] ThreadStateException: " + x.Message + "Critical error" );
                 MessageBox.Show( null, "ThreadStateException while working on threads. Returning all control paths.", "Critical error" );
                 Application.Exit();
                 }
             catch ( OutOfMemoryException x ) {
-                Console.Error.WriteLine( "[6] OutOfMemoryException: " + x.Message + "Critical error" );
+                this.writeLineToStdErr( "[6] OutOfMemoryException: " + x.Message + "Critical error" );
                 MessageBox.Show( null, "OutOfMemoryException while working on threads. Returning all control paths.", "Critical error" );
                 Application.Exit();
                 }
             catch ( ThreadInterruptedException x ) {
-                Console.Error.WriteLine( "[6] ThreadInterruptedException: " + x.Message + "Critical error" );
+                this.writeLineToStdErr( "[6] ThreadInterruptedException: " + x.Message + "Critical error" );
                 MessageBox.Show( null, "ThreadInterruptedException while working on threads. Returning all control paths.", "Critical error" );
                 Application.Exit();
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[6] Exception: " + x.Message + "Critical error" );
+                this.writeLineToStdErr( "[6] Exception: " + x.Message + "Critical error" );
                 MessageBox.Show( null, "Exception while working on threads. Returning all control paths.", "Critical error" );
                 Application.Exit();
                 }
@@ -635,19 +653,19 @@ namespace WebCrawler
                         currentSiteContent = connection.DownloadString( urlEntry );
                         }
                     catch ( ArgumentNullException x ) {
-                        Console.Error.WriteLine("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
+                        this.writeLineToStdErr("[2] ArgumentNullException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( WebException x ) {
-                        Console.Error.WriteLine("[2] WebException: " + x.Message + " urlEntry=" + urlEntry);
+                        this.writeLineToStdErr("[2] WebException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( NotSupportedException x ) {
-                        Console.Error.WriteLine("[2] NotSupportedException: " + x.Message + " urlEntry=" + urlEntry);
+                        this.writeLineToStdErr("[2] NotSupportedException: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
                     catch ( Exception x ) {
-                        Console.Error.WriteLine("[2] Exception: " + x.Message + " urlEntry=" + urlEntry);
+                        this.writeLineToStdErr("[2] Exception: " + x.Message + " urlEntry=" + urlEntry);
                         continue;
                         }
 
@@ -768,7 +786,6 @@ namespace WebCrawler
 
         private void setCurrentStateToUpdateLabelText( string labelText )
             {
-            // 'catch' block may be never reached because of Application.Exit().       
             try {
                 this.Invoke( ( MethodInvoker ) delegate {
                     this.currentStateToUpdateLabel.Text = labelText;
@@ -776,10 +793,10 @@ namespace WebCrawler
                     });
                 }
             catch ( ObjectDisposedException x ) {
-                Console.Error.WriteLine( "[8] ObjectDisposedException: " + x.Message );
+                this.writeLineToStdErr( "[8] ObjectDisposedException: " + x.Message );
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[8] Exception: " + x.Message );
+                this.writeLineToStdErr( "[8] Exception: " + x.Message );
                 }
             }
 
@@ -797,35 +814,35 @@ namespace WebCrawler
                 Directory.CreateDirectory( path );
                 }
             catch ( DirectoryNotFoundException x ) {
-                Console.Error.WriteLine( "[3] DirectoryNotFoundException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] DirectoryNotFoundException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( PathTooLongException x ) {
-                Console.Error.WriteLine( "[3] PathTooLongException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] PathTooLongException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( IOException x ) {
-                Console.Error.WriteLine( "[3] IOException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] IOException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( UnauthorizedAccessException x ) {
-                Console.Error.WriteLine( "[3] UnauthorizedAccessException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] UnauthorizedAccessException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine( "[3] ArgumentNullException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] ArgumentNullException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( ArgumentException x ) {
-                Console.Error.WriteLine( "[3] ArgumentException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] ArgumentException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
-                Console.Error.WriteLine( "[3] NotSupportedException: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] NotSupportedException: " + x.Message + " path=" + path );
                 return ( false );
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[3] Exception: " + x.Message + " path=" + path );
+                this.writeLineToStdErr( "[3] Exception: " + x.Message + " path=" + path );
                 return ( false );
                 }
 
@@ -856,7 +873,7 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Validates the directory creation. On a negative result a MessageBox.Show() and a Console.Error.WriteLine() will be involved.
+        /// Validates the directory creation. On a negative result a MessageBox.Show() and a writeLineToStdErr() will be involved.
         /// </summary>
         /// <param name="path">A path with the directory to check.</param>
         /// <returns>'true' if validation has been passed, 'false' otherwise</returns>
@@ -867,7 +884,7 @@ namespace WebCrawler
 
             if ( isDirectoryExisting == false ) {
                 string message = "The directory has not been created for a path=" + path;
-                Console.Error.WriteLine( message );
+                this.writeLineToStdErr( message );
                 MessageBox.Show( this, message, "Directory creation failed" );
                 return ( false );
                 }
@@ -916,43 +933,157 @@ namespace WebCrawler
                     }
                 }
             catch ( UnauthorizedAccessException x ) {
-                Console.Error.WriteLine( "[4] UnauthorizedAccessException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] UnauthorizedAccessException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( ArgumentNullException x ) {
-                Console.Error.WriteLine( "[4] ArgumentNullException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] ArgumentNullException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( ArgumentException x ) {
-                Console.Error.WriteLine( "[4] ArgumentException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] ArgumentException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( PathTooLongException x ) {
-                Console.Error.WriteLine( "[4] PathTooLongException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] PathTooLongException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( DirectoryNotFoundException x ) {
-                Console.Error.WriteLine( "[4] DirectoryNotFoundException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] DirectoryNotFoundException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
-                Console.Error.WriteLine( "[4] NotSupportedException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] NotSupportedException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( ObjectDisposedException x ) {
-                Console.Error.WriteLine( "[4] ObjectDisposedException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] ObjectDisposedException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( IOException x ) {
-                Console.Error.WriteLine( "[4] IOException: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] IOException: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
             catch ( Exception x ) {
-                Console.Error.WriteLine( "[4] Exception: " + x.Message + partialErrorMessage );
+                this.writeLineToStdErr( "[4] Exception: " + x.Message + partialErrorMessage );
                 return ( false );
                 }
 
             return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Write the given line to the standard error stream (StdErr) and flushes it. An exception handling is provided.
+        /// If any exception will be raised, then the method tries to use a Console.Error.WriteLineAsync() without awaiting.
+        /// </summary>
+        /// <param name="text">A text to write with an ending terminator line into the StdErr.</param>
+        /// <returns>'true' if no exception has been raised, 'false' otherwise.</returns>
+
+        private bool writeLineToStdErr( string text )
+            {
+            try {
+                Console.Error.WriteLine( text );
+                Console.Error.Flush();
+                }
+            catch ( ObjectDisposedException x ) {
+                MessageBox.Show( null, "[9] ObjectDisposedException: " + x.Message + "text=" + text, "Critical error" );
+                return ( false );
+                }
+            catch ( InvalidOperationException x ) {
+                MessageBox.Show( null, "[9] InvalidOperationException: " + x.Message + "text=" + text, "Critical error" );
+                return ( false );
+                }
+            catch ( IOException x ) {
+                MessageBox.Show( null, "[9] IOException: " + x.Message + "text=" + text, "Critical error" );
+                return ( false );
+                }
+            catch ( Exception x ) {
+                MessageBox.Show( null, "[9] Exception: " + x.Message + "text=" + text, "Critical error" );
+                return ( false );
+                }
+
+            return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Sets a text to the corresponding name component and refreshes it. This procedure will always be working on the UI thread.
+        /// An exception handling is provided for this.
+        /// </summary>
+        /// <param name="text">A text to assign to the mentioned label.</param>
+
+        private void setCounterToUpdateLabelText( string text )
+            {
+            try {
+                this.Invoke( ( MethodInvoker ) delegate {
+                    this.counterToUpdateLabel.Text = text;
+                    this.counterToUpdateLabel.Refresh();
+                    });
+                }
+            catch ( ObjectDisposedException x ) {
+                this.writeLineToStdErr( "[11] ObjectDisposedException: " + x.Message );
+                }
+            catch ( Exception x ) {
+                this.writeLineToStdErr( "[11] Exception: " + x.Message );
+                }
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Defines the internal timer function body and its correlated thread function body.
+        /// Use this procedure to define a counter working on the defined UI component 'counterToUpdateLabel'.
+        /// </summary>
+
+        private void defineThreadWorkingUICounter()
+            {
+            this.timerThread = new Thread( () => {
+                System.Timers.Timer timer = new System.Timers.Timer();
+                ushort numberOfSeconds = 0;
+                ushort numberOfMinutes = 0;
+                ushort numberOfHours = 0;
+                ulong numberOfDays = 0;
+
+                timer.Elapsed += ( object sender, System.Timers.ElapsedEventArgs e ) => {
+                    numberOfSeconds++;
+
+                    if ( numberOfSeconds > 59 ) {
+                        numberOfSeconds = 0;
+                        numberOfMinutes++;
+                        }
+
+                    if ( numberOfMinutes > 59 ) {
+                        numberOfMinutes = 0;
+                        numberOfHours++;
+                        }
+
+                    if ( numberOfHours > 23 ) {
+                        numberOfHours = 0;
+                        numberOfDays++;
+                        }
+
+                    string numberOfHoursText = numberOfHours.ToString("00");
+                    string numberOfMinutesText = numberOfMinutes.ToString("00");
+                    string numberOfSecondsText = numberOfSeconds.ToString("00");
+                    string numberOfDaysText = numberOfDays.ToString();
+                    string counterText = numberOfDaysText + ":" + numberOfHoursText + ":" + numberOfMinutesText + ":" + numberOfSecondsText;
+                    this.setCounterToUpdateLabelText( counterText );
+                    };
+
+                timer.Interval = 1000;
+                timer.Enabled = true;
+                timer.Start();
+
+                while ( this.Disposing == false ) {
+                    // Count until the MainWindow will not be disposing.
+                    }
+
+                timer.Enabled = false;
+                timer.Stop();
+                });
             }
 
         //______________________________________________________________________________________________________________________________
