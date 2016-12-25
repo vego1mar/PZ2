@@ -175,11 +175,11 @@
             // counterToUpdateLabel
             // 
             this.counterToUpdateLabel.AutoSize = true;
-            this.counterToUpdateLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.counterToUpdateLabel.Location = new System.Drawing.Point(173, 76);
+            this.counterToUpdateLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 17.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.counterToUpdateLabel.Location = new System.Drawing.Point(174, 73);
             this.counterToUpdateLabel.MinimumSize = new System.Drawing.Size(175, 0);
             this.counterToUpdateLabel.Name = "counterToUpdateLabel";
-            this.counterToUpdateLabel.Size = new System.Drawing.Size(175, 20);
+            this.counterToUpdateLabel.Size = new System.Drawing.Size(175, 29);
             this.counterToUpdateLabel.TabIndex = 21;
             this.counterToUpdateLabel.Text = "0:00:00:00";
             this.counterToUpdateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

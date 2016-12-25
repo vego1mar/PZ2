@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace WebCrawler
+namespace CustomMessageBox
     {
     static class Program
         {
@@ -12,8 +12,8 @@ namespace WebCrawler
         static void Main()
             {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            Application.SetCompatibleTextRenderingDefault( false );
+            Application.Run( new Form() );
             }
         }
     }

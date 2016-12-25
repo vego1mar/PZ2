@@ -31,6 +31,7 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
+        /// The default constructor.
         /// Invokes InitializeComponent() method that is required for Designer support method.
         /// </summary>
 
@@ -43,8 +44,7 @@ namespace WebCrawler
             this.applicationPath = string.Empty;
             this.timerThread = null;
 
-            this.defineThreadWorkingUICounter();
-            this.timerThread.Start();
+            this.notifyUserToStartTimerOrNot();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -169,6 +169,9 @@ namespace WebCrawler
                 this.writeLineToStdErr( Environment.NewLine );
                 this.stdErrStream.Close();
                 }
+
+            Application.ExitThread();
+            Application.Exit();
             }
 
         //______________________________________________________________________________________________________________________________
@@ -206,8 +209,8 @@ namespace WebCrawler
             uint levelOfDepth = this.retrieveTheStateOfSelectedRadioButtonLevel();
             this.setCurrentStateToUpdateLabelText( "Working" );
 
-            // Do not encapsulate this block due to a GUI synchronization problem (refreshing).
-            // Task.Factory.StartNew() is simply entering a ThreadPool.
+            // Do not encapsulate this block due to a GUI synchronization problem with refreshing.
+            // Task.Factory.StartNew() simply means entering a ThreadPool.
             try {
                 await Task.Factory.StartNew( () => 
                     this.crawlThroughTheSite( websiteContent, levelOfDepth ),  
@@ -217,6 +220,11 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.writeLineToStdErr( "[5] ArgumentNullException: " + x.Message );
                 this.setCurrentStateToUpdateLabelText( "ArgumentNullException while awaiting on Task" );
+                return;
+                }
+            catch ( ObjectDisposedException x ) {
+                this.writeLineToStdErr( "[5] ObjectDisposedException: " + x.Message );
+                this.setCurrentStateToUpdateLabelText( "ObjectDisposedException while awaiting on Task" );
                 return;
                 }
             catch ( ArgumentOutOfRangeException x ) {
@@ -371,6 +379,9 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 this.writeLineToStdErr( "[7] ObjectDisposedException: " + x.Message );
                 }
+            catch ( InvalidOperationException x ) {
+                this.writeLineToStdErr( "[7] InvalidOperationException: " + x.Message );
+                }
             catch ( Exception x ) {
                 this.writeLineToStdErr( "[7] Exception: " + x.Message );
                 }
@@ -450,7 +461,6 @@ namespace WebCrawler
 
             // LEVEL 2
             if ( levelOfDepth < 2 ) {
-                // TODO - pages level saving correctness through directories and steps
                 return;
                 }
 
@@ -553,10 +563,6 @@ namespace WebCrawler
                         }
                     }
                 }
-
-            // TODO - test level 3 loops complete execution
-            // TODO - 'reset counter' button
-            // TODO - 'stop proceeding' button
             }
 
         //______________________________________________________________________________________________________________________________
@@ -638,7 +644,6 @@ namespace WebCrawler
             WebClient connection = new WebClient();
             uint i = 0;
 
-            // Download every page of absolute links founded.
             // This 'foreach' loop must stay in the body of 'while' loop.
             // This ensure that 'foreach' loop will continue its work after returning from 'catch' block with non-altered iterator.
             while ( i < absoluteLinks.Count ) {
@@ -763,17 +768,39 @@ namespace WebCrawler
 
             string msgBoxText = "A simple web crawler with three levels of searching depth." + newLine +
                 "It establishes only the HTTP connections and looking for only the absolute links (URIs)." + newLine +
+                "The downloaded sites content will be saved to the directory of application execution." + newLine +
+                newLine +
+                "----------------------------------------------------------------------------" + newLine +
+                newLine +
+                "IMPORTANT INFORMATION ABOUT PROGRAM WORKFLOW!" + newLine +
+                newLine +
+                "Level 0 means the main page, its links and its content." + newLine +
+                "Level 1 means searching for links in the content of the Level 0." + newLine +
+                "Level 2 means grabbing links from the Level 1 results." + newLine +
+                "Level 3 means processing links from the Level 2 output." + newLine +
+                newLine +
+                "Level 1: main page and links from it will be saved (lvl_0)" + newLine +
+                "Level 2: links from the Level 1 will be saved (lvl_1)" + newLine +
+                "Level 3: links from the Level 2 and Level 3 will be saved (lvl_2, lvl_3)" + newLine +
+                newLine +
+                "Be aware of the Level 2 working effects peculiarity!" + newLine +
+                "Also, please note that only the distinct websites per level will be saved." + newLine +
+                newLine +
+                "----------------------------------------------------------------------------" + newLine +
                 newLine +
                 "StdErr stream redirected: " + isStdErrRedirectedSuccessfully + newLine +
                 "StdErr file name: " + STDERR_FILENAME + newLine +
+                "Crawler root directory name: " + ROOT_DIRECTORY_NAME + newLine +
+                newLine +
+                "----------------------------------------------------------------------------" + newLine +
                 newLine +
                 "Application path: " + this.applicationPath + newLine +
                 ".NET Framework: " + usedFramework + newLine +
                 "64-bit process: " + x64Process + newLine +
-                "Current managed thread ID: " + currentManagedThreadID + newLine;
+                "Current managed thread ID: " + currentManagedThreadID + newLine +
+                newLine;
 
-            MessageBox.Show( this, msgBoxText, "Information" );
-            // TODO - custom message box
+            CustomMessageBox.CustomMessageBox.ShowBox( msgBoxText, "Information" );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -794,6 +821,9 @@ namespace WebCrawler
                 }
             catch ( ObjectDisposedException x ) {
                 this.writeLineToStdErr( "[8] ObjectDisposedException: " + x.Message );
+                }
+            catch ( InvalidOperationException x ) {
+                this.writeLineToStdErr( "[8] InvalidOperationException: " + x.Message );
                 }
             catch ( Exception x ) {
                 this.writeLineToStdErr( "[8] Exception: " + x.Message );
@@ -987,8 +1017,11 @@ namespace WebCrawler
                 Console.Error.WriteLine( text );
                 Console.Error.Flush();
                 }
-            catch ( ObjectDisposedException x ) {
-                MessageBox.Show( null, "[9] ObjectDisposedException: " + x.Message + "text=" + text, "Critical error" );
+            catch ( ObjectDisposedException ) {
+                // If ObjectDisposedException is raising here, then the MainWindow apparently does not exist anymore.
+                // Brutal, but MainWindow_FormClosed() has already been ended at this point.
+                Application.Exit();
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
                 return ( false );
                 }
             catch ( InvalidOperationException x ) {
@@ -1025,6 +1058,9 @@ namespace WebCrawler
                 }
             catch ( ObjectDisposedException x ) {
                 this.writeLineToStdErr( "[11] ObjectDisposedException: " + x.Message );
+                }
+            catch ( InvalidOperationException x ) {
+                this.writeLineToStdErr( "[11] InvalidOperationException: " + x.Message );
                 }
             catch ( Exception x ) {
                 this.writeLineToStdErr( "[11] Exception: " + x.Message );
@@ -1078,12 +1114,67 @@ namespace WebCrawler
                 timer.Start();
 
                 while ( this.Disposing == false ) {
-                    // Count until the MainWindow will not be disposing.
+                    // This loop may consume most of the CPU time.
+                    try {
+                        Thread.Sleep( 900 );
+                        }
+                    catch ( ArgumentOutOfRangeException x ) {
+                        this.writeLineToStdErr( "[13] ArgumentOutOfRangeException: " + x.Message );
+                        }
+                    catch ( Exception x ) {
+                        this.writeLineToStdErr( "[13] Exception: " + x.Message );
+                        }
                     }
 
                 timer.Enabled = false;
                 timer.Stop();
                 });
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Shows a Yes/No optioned message box that lets the user to choose whether to start the timer or not.
+        /// On negative 'counterToUpdateLabel' component will be hidden.
+        /// An exception handling is provided.
+        /// </summary>
+
+        private void notifyUserToStartTimerOrNot()
+            {
+            try { 
+                string message = "This application may executes a timer-threaded loop with the UI corresponding label refreshing." +
+                    " Because of nature of this solution, that may cause a consuming most of the CPU time." +
+                    " Do you want to start the timer?";
+                DialogResult dialogChoise = MessageBox.Show( message, "Starting a timer", MessageBoxButtons.YesNo );
+
+                if ( dialogChoise == DialogResult.Yes ) {
+                    this.defineThreadWorkingUICounter();
+                    this.timerThread.Start();
+                    }
+                else {
+                    this.counterToUpdateLabel.Visible = false;
+                    }
+                }
+            catch ( ThreadStateException x ) {
+                this.writeLineToStdErr( "[12] ThreadStateException: " + x.Message );
+                MessageBox.Show( this, "ThreadStateException has been raised while starting a timer thread", "Starting a timer" );
+                }
+            catch ( OutOfMemoryException x ) {
+                this.writeLineToStdErr( "[12] OutOfMemoryException: " + x.Message );
+                MessageBox.Show( this, "OutOfMemoryException has been raised while starting a timer thread", "Starting a timer" );
+                }
+            catch ( InvalidOperationException x ) {
+                this.writeLineToStdErr( "[12] InvalidOperationException: " + x.Message );
+                MessageBox.Show( this, "InvalidOperationException has been raised while starting a timer thread", "Starting a timer" );
+                }
+            catch ( System.ComponentModel.InvalidEnumArgumentException x ) {
+                this.writeLineToStdErr( "[12] InvalidEnumArgumentException: " + x.Message );
+                MessageBox.Show( this, "InvalidEnumArgumentException has been raised while starting a timer thread", "Starting a timer" );
+                }
+            catch ( Exception x ) {
+                this.writeLineToStdErr( "[12] Exception: " + x.Message );
+                MessageBox.Show( this, "Exception has been raised while starting a timer thread", "Starting a timer" );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
