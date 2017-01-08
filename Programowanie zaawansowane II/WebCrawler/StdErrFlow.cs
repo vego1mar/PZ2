@@ -78,6 +78,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -89,6 +90,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -100,6 +102,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -111,6 +114,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -122,6 +126,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -133,6 +138,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -144,6 +150,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -155,6 +162,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -166,6 +174,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -177,6 +186,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -266,6 +276,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -277,6 +288,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -288,6 +300,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -299,6 +312,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -310,6 +324,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }
@@ -321,6 +336,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
                 isLastRedirectionSuccessfull = false;
                 return ( false );
                 }

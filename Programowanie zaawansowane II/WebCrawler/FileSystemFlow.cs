@@ -49,6 +49,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-1]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( Exception x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
@@ -58,6 +59,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-1]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
 
             return ( appPath );
@@ -79,7 +81,7 @@ namespace WebCrawler
             try {
                 string regexSearch = new string( Path.GetInvalidFileNameChars() ) + new string( Path.GetInvalidPathChars() );
                 Regex regex = new Regex( string.Format("[{0}]", Regex.Escape( regexSearch )) );
-                path = regex.Replace( path, "" );
+                validWindowsPath = regex.Replace( path, "" );
                 }
             catch ( ArgumentNullException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
@@ -89,6 +91,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-2]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( ArgumentException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
@@ -98,6 +101,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-2]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( FormatException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
@@ -107,6 +111,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-2]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( RegexMatchTimeoutException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
@@ -116,6 +121,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-2]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
 
             return ( validWindowsPath );
@@ -142,6 +148,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( PathTooLongException x ) {
@@ -152,6 +159,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( IOException x ) {
@@ -162,6 +170,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( UnauthorizedAccessException x ) {
@@ -172,6 +181,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( ArgumentNullException x ) {
@@ -182,6 +192,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( ArgumentException x ) {
@@ -192,6 +203,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
@@ -202,6 +214,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( Exception x ) {
@@ -212,6 +225,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
 
@@ -276,6 +290,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( ArgumentNullException x ) {
@@ -286,6 +301,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( ArgumentException x ) {
@@ -296,6 +312,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( PathTooLongException x ) {
@@ -306,6 +323,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( DirectoryNotFoundException x ) {
@@ -316,6 +334,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
@@ -326,6 +345,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( ObjectDisposedException x ) {
@@ -336,6 +356,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( IOException x ) {
@@ -346,6 +367,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
             catch ( Exception x ) {
@@ -356,6 +378,7 @@ namespace WebCrawler
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
 
@@ -372,6 +395,27 @@ namespace WebCrawler
         public static StdErrFlow.ExceptionInfo getLastExceptionInfo()
             {
             return ( lastExceptionInfo );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Creates the root directory using a directory name defined in a constant ROOT_DIRECTORY_NAME.
+        /// Root directory means creating a directory in the location of executable program file location.
+        /// </summary>
+        /// <returns>A path of the root directory on successful directory creation, 'null' otherwise</returns>
+
+        public static string createRootDirectory()
+            {
+            string path = null;
+            string rootDirectoryName = Path.GetDirectoryName( getApplicationFullPath() );
+            string rootDirectory = Path.Combine( rootDirectoryName, ROOT_DIRECTORY_NAME );
+
+            if ( createDirectory( rootDirectory ) == true ) {
+                path = rootDirectory;
+                }
+
+            return ( rootDirectory );
             }
 
         //______________________________________________________________________________________________________________________________
