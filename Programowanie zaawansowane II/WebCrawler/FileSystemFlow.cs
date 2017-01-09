@@ -34,7 +34,7 @@ namespace WebCrawler
         /// </summary>
         /// <returns>The application full path or an empty string if any error occurs.</returns>
 
-        public static string gainApplicationLocation()
+        private static string gainApplicationLocation()
             {
             string appPath = string.Empty;
 
@@ -123,6 +123,16 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 }
+            catch ( Exception x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-2]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
 
             return ( validWindowsPath );
             }
@@ -130,7 +140,7 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Creates a directory using the passed path.
+        /// Creates all directories and subdirectories in the specified path unless they already exist.
         /// </summary>
         /// <param name="path">An absolute path containing the directory name to create.</param>
         /// <returns>'true' if the directory has been created, 'false' otherwise.</returns>

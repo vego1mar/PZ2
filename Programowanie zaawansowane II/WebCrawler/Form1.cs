@@ -16,7 +16,8 @@ namespace WebCrawler
         private Thread timerThread;
         private volatile bool timerDeadFlag;
 
-        private ulong foundedLinksCounter;
+        private ulong foundedLinksNumber;
+        private StdErrFlow.ExceptionInfo lastExceptionInfo;
 
         //______________________________________________________________________________________________________________________________
 
@@ -29,10 +30,8 @@ namespace WebCrawler
             InitializeComponent();
 
             this.timerThread = null;
-            this.timerDeadFlag = false;
-            this.foundedLinksCounter = 0;
-
-            this.notifyUserToStartTimerOrNot();
+            this.timerDeadFlag = true;
+            this.foundedLinksNumber = 0;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -68,21 +67,21 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// An action performed when the 'Proceed' button is 'clicked'.
+        /// An action performed when the 'Proceed' button is clicked.
         /// </summary>
         /// <param name="sender">The GUI component that cause the action.</param>
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
 
         private async void proceedButton_Click( object sender, EventArgs e )
             {
-            this.foundedLinksCounter = 0;
+            this.foundedLinksNumber = 0;
             this.foundedLinksToUpdateLabel.Text = "0";
             this.disableMainWindowControls();
             this.setCurrentStateToUpdateLabelText( "Pending" );
 
             if ( SiteCrawler.isAbsoluteURL( this.websiteURLTextBox.Text ) == false ) {
                 this.setCurrentStateToUpdateLabelText( "Unvalidated URL" );
-                MessageBox.Show( this, "The URL scheme has not been found. Use absolute path of \"http://www.\"", "URL scheme validation" );
+                MessageBox.Show( this, "The typed data is not a proper absolute URL.", "URL scheme validation" );
                 this.enableMainWindowControls();
                 return;
                 }
@@ -90,48 +89,75 @@ namespace WebCrawler
             SiteCrawler site = new SiteCrawler();
             site.setSiteURL( this.websiteURLTextBox.Text );
             site.probeNetworkConnection();
-            string websiteContent = site.getSiteContent();
+            string websiteContent = site.getProbedSiteContent();
 
             if ( websiteContent == string.Empty ) {
-                StdErrFlow.ExceptionInfo x = site.getLastExceptionInfo();
-                string currentStateLabelText = x.typeName + " on the typed URL";
-                this.setCurrentStateToUpdateLabelText( currentStateLabelText );
+                StdErrFlow.ExceptionInfo exception = site.getLastExceptionInfo();
+                this.setCurrentStateToUpdateLabelText( exception.typeName + " caused by the typed URL" );
                 this.enableMainWindowControls();
                 return;
                 }
 
-            uint levelOfDepth = this.retrieveTheStateOfSelectedRadioButtonLevel();
             this.setCurrentStateToUpdateLabelText( "Working" );
 
             // Do not encapsulate this block due to an UI synchronization problem with refreshing.
             try {
                 await Task.Factory.StartNew( () => {
                     SiteCrawler crawler = new SiteCrawler();
-                    crawler.setLevelOfDepth( levelOfDepth );
+                    crawler.setLevelOfDepth( this.gainLevelOfDepthSpinnerValue() );
                     crawler.setSiteURL( this.websiteURLTextBox.Text );
+                    crawler.setAsynchronousDownloadUse( this.asynchronousWebsitesDownloadCheckBox.Checked );
                     crawler.crawlThroughSite();
                     },
                     TaskCreationOptions.LongRunning
                     );
                 }
             catch ( ArgumentNullException x ) {
-                StdErrFlow.writeLine( "[5] ArgumentNullException: " + x.Message );
-                this.setCurrentStateToUpdateLabelText( "ArgumentNullException while awaiting on Task" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
+                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-1]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
                 return;
                 }
             catch ( ObjectDisposedException x ) {
-                StdErrFlow.writeLine( "[5] ObjectDisposedException: " + x.Message );
-                this.setCurrentStateToUpdateLabelText( "ObjectDisposedException while awaiting on Task" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
+                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-1]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
                 return;
                 }
             catch ( ArgumentOutOfRangeException x ) {
-                StdErrFlow.writeLine( "[5] ArgumentOutOfRangeException: " + x.Message );
-                this.setCurrentStateToUpdateLabelText( "ArgumentOutOfRangeException while awaiting on Task" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
+                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-1]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
                 return;
                 }
             catch ( Exception x ) {
-                StdErrFlow.writeLine( "[5] Exception: " + x.Message );
-                this.setCurrentStateToUpdateLabelText( "Exception while awaiting on Task" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
+                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-1]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
                 return;
                 }
 
@@ -142,95 +168,142 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Disables controls on the main window after 'Proceed' button click.
+        /// Disable controls on the main window after 'Proceed' button click.
         /// </summary>
 
         private void disableMainWindowControls()
             {
             this.proceedButton.Enabled = false;
             this.websiteURLTextBox.Enabled = false;
-            this.level1RadioButton.Enabled = false;
-            this.level2RadioButton.Enabled = false;
-            this.level3RadioButton.Enabled = false;
+            this.levelOfDepthSpinner.Enabled = false;
+            this.asynchronousWebsitesDownloadCheckBox.Enabled = false;
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Enables controls on the main window when the 'Proceed' button operation will be finished.
+        /// Enable controls on the main window when the 'Proceed' button operation had finished.
         /// </summary>
 
         private void enableMainWindowControls()
             {
             this.proceedButton.Enabled = true;
             this.websiteURLTextBox.Enabled = true;
-            this.level1RadioButton.Enabled = true;
-            this.level2RadioButton.Enabled = true;
-            this.level3RadioButton.Enabled = true;
+            this.levelOfDepthSpinner.Enabled = true;
+            this.asynchronousWebsitesDownloadCheckBox.Enabled = true;
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Retrieves the state of selected radio button with a 'Level' label.
-        /// This is a number from the set of { 1, 2, 3 }.
-        /// If none of the proper radio button is selected, then the default value of 1 ('Level 1') will be returned.
+        /// Retrieves the current value of the numeric up-down 'level of depth' component.
         /// </summary>
-        /// <returns>A number representing the selected radio button in the GUI.</returns>
+        /// <returns>0 if exception has been raised, a value of range [Minimum; Maximum] from the properties otherwise.</returns>
 
-        private uint retrieveTheStateOfSelectedRadioButtonLevel()
+        private uint gainLevelOfDepthSpinnerValue()
             {
-            bool level1 = this.level1RadioButton.Checked;
-            bool level2 = this.level2RadioButton.Checked;
-            bool level3 = this.level3RadioButton.Checked;
+            uint currentValue = 0;
 
-            uint levelOfDepth = 1;
+            try {
+                currentValue = Convert.ToUInt32( this.levelOfDepthSpinner.Value );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
+                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-2]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( OverflowException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
+                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-2]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
+                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-2]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
 
-            levelOfDepth = (level1 == true) ? (1) : (levelOfDepth);
-            levelOfDepth = (level2 == true) ? (2) : (levelOfDepth);
-            levelOfDepth = (level3 == true) ? (3) : (levelOfDepth);
-
-            return ( levelOfDepth );
+            return ( currentValue );
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// A custom event of founded new link that should be noticed. Updates GUI main window.
-        /// The change itself is an incremential one.
-        /// An exception handling is provided, but obsolete if Application.Exit() will not be used during threads-based processing.
+        /// Updates the 'foundedLinksNumber' field by adding to it the parameter and refreshing the 'foundedLinksToUpdateLabel' UI component.
         /// </summary>
+        /// <param name="numberOfLinks">A number to add to the 'foundedLinksNumber' field.</param>
 
-        private void foundedLinksCount()
+        private void foundedLinksNumberUpdate( uint numberOfLinks )
             {
             try {
-                this.Invoke( ( MethodInvoker ) delegate {
-                    this.foundedLinksCounter++;
-                    this.foundedLinksToUpdateLabel.Text = this.foundedLinksCounter.ToString();
+                this.BeginInvoke( ( MethodInvoker ) delegate {
+                    this.foundedLinksNumber += numberOfLinks;
+                    this.foundedLinksToUpdateLabel.Text = this.foundedLinksNumber.ToString();
                     this.foundedLinksToUpdateLabel.Refresh();
                     });
                 }
             catch ( ObjectDisposedException x ) {
-                StdErrFlow.writeLine( "[7] ObjectDisposedException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = "foundedLinksNumber";
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-3]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
-                StdErrFlow.writeLine( "[7] InvalidOperationException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = "foundedLinksNumber";
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-3]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( Exception x ) {
-                StdErrFlow.writeLine( "[7] Exception: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = "foundedLinksNumber";
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-3]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// An action performed when the 'Info' is clicked.
+        /// An action performed when the 'Info' button is clicked.
         /// </summary>
         /// <param name="sender">The GUI component that cause the action.</param>
         /// <param name="e">Arguments of the action related with the GUI sender component.</param>
 
         private void InfoButton_Click( object sender, EventArgs e )
             {
+            // TASK: change the info
+            // TASK: foundedLinksNumber functionality (event on the SiteCrawler side)
+            // TASK: see errors log UI functionality
+            // TASK: subdirectory with the main site name
+
             string newLine = Environment.NewLine;
             string usedFramework = typeof( string ).Assembly.ImageRuntimeVersion;
             bool x64Process = Environment.Is64BitProcess;
@@ -276,65 +349,105 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Sets the name corresponding component text by a passed argument value and refreshes the GUI main window.
-        /// An exception handling is provided, but obsolete if Application.Exit() will not be used during threads-based processing.
+        /// Set a text to the 'currentStateToUpdateLabel' UI component and refreshes it. This procedure will always work on the UI thread.
         /// </summary>
-        /// <param name="labelText">Text of the name corresponding label to set. Use of 'null' here is discouraged.</param>
+        /// <param name="labelText">A text to assign to the UI label. Use of 'null' here is discouraged.</param>
 
         private void setCurrentStateToUpdateLabelText( string labelText )
             {
             try {
-                this.Invoke( ( MethodInvoker ) delegate {
+                this.BeginInvoke( ( MethodInvoker ) delegate {
                     this.currentStateToUpdateLabel.Text = labelText;
                     this.currentStateToUpdateLabel.Refresh();
                     });
                 }
             catch ( ObjectDisposedException x ) {
-                StdErrFlow.writeLine( "[8] ObjectDisposedException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = labelText.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
-                StdErrFlow.writeLine( "[8] InvalidOperationException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = labelText.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( Exception x ) {
-                StdErrFlow.writeLine( "[8] Exception: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = labelText.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Sets a text to the corresponding name component and refreshes it. This procedure will always be working on the UI thread.
-        /// An exception handling is provided for this.
+        /// Set a text to the 'counterToUpdateLabel' UI component and refreshes it. This procedure will always work on the UI thread.
         /// </summary>
-        /// <param name="text">A text to assign to the mentioned label.</param>
+        /// <param name="text">A text to assign to the UI label.</param>
 
         private void setCounterToUpdateLabelText( string text )
             {
             try {
-                this.Invoke( ( MethodInvoker ) delegate {
+                this.BeginInvoke( ( MethodInvoker ) delegate {
                     this.counterToUpdateLabel.Text = text;
                     this.counterToUpdateLabel.Refresh();
                     });
                 }
             catch ( ObjectDisposedException x ) {
-                StdErrFlow.writeLine( "[11] ObjectDisposedException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = text.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
-                StdErrFlow.writeLine( "[11] InvalidOperationException: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = text.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( Exception x ) {
-                StdErrFlow.writeLine( "[11] Exception: " + x.Message );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = text.ToString();
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             }
 
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Defines the internal timer function body and its correlated thread function body.
-        /// Use this procedure to define a counter working on the defined UI component 'counterToUpdateLabel'.
+        /// Creates a new thread for the specified field and defines its function body. 
+        /// This UI timer works with the 'counterToUpdateLabel' component.
         /// </summary>
 
-        private void defineThreadWorkingUICounter()
+        private void defineUICounterThread()
             {
             this.timerThread = new Thread( () => {
                 System.Timers.Timer timer = new System.Timers.Timer();
@@ -375,15 +488,7 @@ namespace WebCrawler
 
                 while ( this.timerDeadFlag == false ) {
                     // This loop may consume most of the CPU time.
-                    try {
-                        Thread.Sleep( 900 );
-                        }
-                    catch ( ArgumentOutOfRangeException x ) {
-                        StdErrFlow.writeLine( "[13] ArgumentOutOfRangeException: " + x.Message );
-                        }
-                    catch ( Exception x ) {
-                        StdErrFlow.writeLine( "[13] Exception: " + x.Message );
-                        }
+                    Thread.Sleep( 900 );
                     }
 
                 timer.Enabled = false;
@@ -394,46 +499,203 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Shows a Yes/No optioned message box that lets the user to choose whether to start the timer or not.
-        /// On negative 'counterToUpdateLabel' component will be hidden.
-        /// An exception handling is provided.
+        /// An action performed when the 'Start' radio button is checked.
         /// </summary>
+        /// <param name="sender">The GUI component that cause the action.</param>
+        /// <param name="e">Arguments of the action related with the GUI sender component.</param>
 
-        private void notifyUserToStartTimerOrNot()
+        private void timerStartRadioButton_CheckedChanged( object sender, EventArgs e )
             {
-            try { 
-                string message = "This application may executes a timer-threaded loop with the UI corresponding label refreshing." +
-                    " Because of nature of this solution, that may cause a consuming most of the CPU time." +
-                    " Do you want to start the timer?";
-                DialogResult dialogChoise = MessageBox.Show( message, "Starting a timer", MessageBoxButtons.YesNo );
-
-                if ( dialogChoise == DialogResult.Yes ) {
-                    this.defineThreadWorkingUICounter();
+            try {
+                if ( this.timerStartRadioButton.Checked == true ) {
+                    this.timerStopRadioButton.Checked = false;
+                    this.timerStopRadioButton.Enabled = true;
+                    this.timerStartRadioButton.Enabled = false;
+                    this.timerDeadFlag = false;
+                    this.defineUICounterThread();
                     this.timerThread.Start();
                     }
-                else {
-                    this.counterToUpdateLabel.Visible = false;
-                    }
+                }
+            catch ( ArgumentNullException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( ThreadStateException x ) {
-                StdErrFlow.writeLine( "[12] ThreadStateException: " + x.Message );
-                MessageBox.Show( this, "ThreadStateException has been raised while starting a timer thread", "Starting a timer" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( FormatException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( OutOfMemoryException x ) {
-                StdErrFlow.writeLine( "[12] OutOfMemoryException: " + x.Message );
-                MessageBox.Show( this, "OutOfMemoryException has been raised while starting a timer thread", "Starting a timer" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
-            catch ( InvalidOperationException x ) {
-                StdErrFlow.writeLine( "[12] InvalidOperationException: " + x.Message );
-                MessageBox.Show( this, "InvalidOperationException has been raised while starting a timer thread", "Starting a timer" );
-                }
-            catch ( System.ComponentModel.InvalidEnumArgumentException x ) {
-                StdErrFlow.writeLine( "[12] InvalidEnumArgumentException: " + x.Message );
-                MessageBox.Show( this, "InvalidEnumArgumentException has been raised while starting a timer thread", "Starting a timer" );
+            catch ( ObjectDisposedException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( Exception x ) {
-                StdErrFlow.writeLine( "[12] Exception: " + x.Message );
-                MessageBox.Show( this, "Exception has been raised while starting a timer thread", "Starting a timer" );
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// An action performed when the 'Stop' radio button is checked.
+        /// </summary>
+        /// <param name="sender">The GUI component that cause the action.</param>
+        /// <param name="e">Arguments of the action related with the GUI sender component.</param>
+
+        private void timerStopRadioButton_CheckedChanged( object sender, EventArgs e )
+            {
+            try {
+                if ( this.timerStopRadioButton.Checked == true ) {
+                    this.timerStartRadioButton.Checked = false;
+                    this.timerStartRadioButton.Enabled = true;
+                    this.timerStopRadioButton.Enabled = false;
+                    this.timerDeadFlag = true;
+                    this.timerThread = null;
+                    }
+                }
+            catch ( ArgumentNullException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ThreadStateException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( FormatException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( OutOfMemoryException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ObjectDisposedException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = e.ToString();
+                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-7]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
             }
 

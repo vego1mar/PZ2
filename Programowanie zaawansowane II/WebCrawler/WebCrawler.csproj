@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>WebCrawler.SiteCrawler</StartupObject>
+    <StartupObject>WebCrawler.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

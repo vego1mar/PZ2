@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Net;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace WebCrawler
     { 
@@ -14,9 +12,10 @@ namespace WebCrawler
         {
 
         private string siteURL;
-        private string siteContent;
+        private string probedSiteContent;
 
         private uint levelOfDepth;
+        private bool useAsynchronousDownload;
         private StdErrFlow.ExceptionInfo lastExceptionInfo;
 
         //______________________________________________________________________________________________________________________________
@@ -28,8 +27,9 @@ namespace WebCrawler
         public SiteCrawler()
             {
             this.siteURL = string.Empty;
-            this.siteContent = string.Empty;
+            this.probedSiteContent = string.Empty;
             this.levelOfDepth = 2;
+            this.useAsynchronousDownload = false;
 
             this.lastExceptionInfo.typeName = string.Empty;
             this.lastExceptionInfo.methodName = string.Empty;
@@ -51,7 +51,7 @@ namespace WebCrawler
             {
             if ( isAbsoluteURL( url ) == true ) {
                 this.siteURL = url;
-                this.siteContent = string.Empty;
+                this.probedSiteContent = string.Empty;
                 return ( true );
                 }
 
@@ -117,9 +117,33 @@ namespace WebCrawler
         /// </summary>
         /// <returns>The website content for the given URL if the connection has been probed.</returns>
 
-        public string getSiteContent()
+        public string getProbedSiteContent()
             {
-            return ( this.siteContent );
+            return ( this.probedSiteContent );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Getter.
+        /// </summary>
+        /// <returns>'true' if websites will be downloaded asynchronously, 'false' otherwise.</returns>
+
+        public bool getAsynchronousDownloadUse()
+            {
+            return ( this.useAsynchronousDownload );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Setter. Using asynchronous download may cause an abruptly termination of the crawling procedure.
+        /// </summary>
+        /// <param name="state">A new state of the flag for the crawling procedure.</param>
+
+        public void setAsynchronousDownloadUse( bool state )
+            {
+            this.useAsynchronousDownload = state;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -151,9 +175,8 @@ namespace WebCrawler
                     throw ( new ArgumentException( "The site URL is an empty string." ) );
                     }
 
-                WebClient website = new WebClient();
-                string content = website.DownloadString( url );
-                this.siteContent = content;
+                string content = new System.Net.WebClient().DownloadString( url );
+                this.probedSiteContent = content;
                 }
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
@@ -177,7 +200,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( Environment.NewLine );
                 return ( false );
                 }
-            catch ( WebException x ) {
+            catch ( System.Net.WebException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 this.lastExceptionInfo.argument = url.ToString();
@@ -224,7 +247,7 @@ namespace WebCrawler
         public static ISet<string> getOnlyTheLinks( string websiteContent )
             {
             // A regex for the whole <a> tags content: "<a.*?>(.*?)<\\/a>"
-            Regex regex = new Regex("(?<=<a\\s*?href=(?:'|\"))[^'\"]*?(?=(?:'|\"))");
+            var regex = new System.Text.RegularExpressions.Regex("(?<=<a\\s*?href=(?:'|\"))[^'\"]*?(?=(?:'|\"))");
             ISet<string> newLinks = new HashSet<string>();
 
             // Preventing an ArgumentNullException raising using Regex.Matches().
@@ -265,12 +288,20 @@ namespace WebCrawler
         /// <summary>
         /// Crawls through the site gained from the field using setted level of depth.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if the website URL has not been gained yet.</exception>
 
         public void crawlThroughSite()
             {
-            string rootDirectoryName = FileSystemFlow.createRootDirectory();
-            ISet<string> absoluteLinks0 = this.performBasicCrawlingStep( this.getSiteURL(), rootDirectoryName );
-            this.performLevelCrawlingStep( absoluteLinks0, rootDirectoryName, 1 );
+            string mainSiteURL = this.getSiteURL();
+
+            if ( mainSiteURL != string.Empty ) {
+                string rootDirectoryName = FileSystemFlow.createRootDirectory();
+                ISet<string> absoluteLinks0 = this.performBasicCrawlingStep( mainSiteURL, rootDirectoryName );
+                this.performLevelCrawlingStep( absoluteLinks0, rootDirectoryName, 1 );
+                }
+            else {
+                throw ( new ArgumentNullException( "mainSiteURL", "The website URL is empty." ) );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -352,12 +383,22 @@ namespace WebCrawler
 
         private ISet<string> performBasicCrawlingStep( string url, string directoryName )
             {
-            string websiteContent = this.downloadWebsiteContent( url );
+            string websiteContent = string.Empty;
+
+            if ( this.getAsynchronousDownloadUse() == true ) {
+                websiteContent = this.downloadWebsiteContentAsynchronously( url );
+                }
+            else {
+                websiteContent = this.downloadWebsiteContent( url );
+                }
 
             FileSystemFlow.createDirectory( directoryName );
             string fileName = FileSystemFlow.removeWindowsFileSystemReservedCharacters( url );
             string fileNameWithExtension = string.Concat( fileName, ".html" );
-            FileSystemFlow.saveTextToFile( directoryName, fileNameWithExtension, websiteContent );
+
+            if ( websiteContent != string.Empty ) {
+                FileSystemFlow.saveTextToFile( directoryName, fileNameWithExtension, websiteContent );
+                }
 
             ISet<string> absoluteLinks = this.extractAbsoluteLinksFrom( websiteContent );
             return ( absoluteLinks );
@@ -391,8 +432,7 @@ namespace WebCrawler
             string websiteContent = string.Empty;
 
             try {
-                WebClient client = new WebClient();
-                websiteContent = client.DownloadString( url );
+                websiteContent = new System.Net.WebClient().DownloadString( url );
                 }
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
@@ -414,7 +454,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 }
-            catch ( WebException x ) {
+            catch ( System.Net.WebException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 this.lastExceptionInfo.argument = url.ToString();
@@ -441,6 +481,97 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
+        /// Downloads the HTML content from a website given as an URL using asynchronous method.
+        /// </summary>
+        /// <param name="url">An absolute URL to connect with for downloading the website content.</param>
+        /// <returns>The website content behind the passed URL.</returns>
+
+        private string downloadWebsiteContentAsynchronously( string url )
+            {
+            string websiteContent = string.Empty;
+
+            try {
+                Uri uri = new Uri( url );
+                System.Net.WebClient client = new System.Net.WebClient();
+                bool isDownloadFinished = false;
+                System.Reflection.TargetInvocationException downloadException = null;
+
+                client.DownloadStringCompleted += delegate ( object sender, System.Net.DownloadStringCompletedEventArgs e ) {
+                    // Preventing an internal exception raising.
+                    if ( ( e.Cancelled == false ) && ( e.Error == null ) ) {
+                        websiteContent = e.Result;
+                        isDownloadFinished = true;
+                        }
+                    else {
+                        downloadException = new System.Reflection.TargetInvocationException( e.Error.Message, e.Error );
+                        }
+                    };
+
+                client.DownloadStringAsync( uri );
+
+                while ( isDownloadFinished == false ) {
+                    if ( downloadException != null ) {
+                        throw ( downloadException );
+                        }
+                    }
+                }
+            catch ( ArgumentNullException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = url.ToString();
+                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( UriFormatException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = url.ToString();
+                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( System.Net.WebException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = url.ToString();
+                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( System.Reflection.TargetInvocationException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = url.ToString();
+                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = url.ToString();
+                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-4]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+
+            return ( websiteContent );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
         /// Debug test code.
         /// </summary>
 
@@ -451,7 +582,17 @@ namespace WebCrawler
             SiteCrawler sc = new SiteCrawler();
             sc.setLevelOfDepth( 2 );
             sc.setSiteURL( "http://www.a.pl" );
-            sc.crawlThroughSite();
+            sc.setAsynchronousDownloadUse( false );
+
+            try {
+                sc.crawlThroughSite();
+                }
+            catch ( ArgumentNullException x ) {
+                System.Diagnostics.Debug.WriteLine( x.ToString() );
+                }
+            catch ( Exception x ) {
+                System.Diagnostics.Debug.WriteLine( x.ToString() );
+                }
 
             StdErrFlow.tryToRetrievePreviousStdErr();
             StdErrFlow.closeStreams();

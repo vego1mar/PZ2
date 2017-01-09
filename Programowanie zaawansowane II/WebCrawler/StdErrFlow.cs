@@ -61,7 +61,7 @@ namespace WebCrawler
 
                 isLastRedirectionSuccessfull = true;
 
-                string appName = FileSystemFlow.gainApplicationLocation();
+                string appName = FileSystemFlow.getApplicationFullPath();
                 appName = appName.Substring( appName.LastIndexOf('\\') + 1 );
 
                 writeLine( Environment.NewLine );
