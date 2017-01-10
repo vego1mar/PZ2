@@ -13,6 +13,8 @@ namespace WebCrawler
         {
 
         internal const string ROOT_DIRECTORY_NAME = "web";
+        internal const int WINDOWS_QUALIFIED_DIRECTORY_LENGTH = 248;
+        internal const int WINDOWS_QUALIFIED_FILENAME_LENGTH = 260;
 
         private static string applicationFullPath = gainApplicationLocation();
         private static StdErrFlow.ExceptionInfo lastExceptionInfo;
@@ -154,7 +156,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -165,7 +167,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -176,7 +178,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -187,7 +189,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -198,7 +200,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -209,7 +211,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -220,7 +222,7 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
@@ -231,28 +233,11 @@ namespace WebCrawler
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 lastExceptionInfo.argument = path.ToString();
-                lastExceptionInfo.causeEvent = "Removing Windows file system reserved characters.";
+                lastExceptionInfo.causeEvent = "Creating a directory.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-3]";
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
-                return ( false );
-                }
-
-            return ( true );
-            }
-
-        //______________________________________________________________________________________________________________________________
-
-        /// <summary>
-        /// Validates the directory creation.
-        /// </summary>
-        /// <param name="path">A path with the directory to check.</param>
-        /// <returns>'true' if validation has been passed, 'false' otherwise</returns>
-
-        public static bool validateDirectoryCreation( string path )
-            {
-            if ( Directory.Exists( path ) == false ) {
                 return ( false );
                 }
 
@@ -276,26 +261,21 @@ namespace WebCrawler
         /// <summary>
         /// Save the given text data to the specified location with the specified file name into a file.
         /// </summary>
-        /// <param name="directoryName">The absolute directory name of the target location.</param>
-        /// <param name="fileName">The name of the file.</param>
+        /// <param name="filePath">A path with the file name.</param>
         /// <param name="fileContent">A content to write into a file.</param>
         /// <returns>'true' if IO operations have been done successfully, 'false' otherwise.</returns>
 
-        public static bool saveTextToFile( string directoryName, string fileName, string fileContent )
+        public static bool saveTextToFile( string filePath, string fileContent )
             {
-            string path = string.Empty;
-
             try {
-                path = Path.Combine( directoryName, fileName );
-
-                using ( StreamWriter writer = File.CreateText( path ) ) { 
+                using ( StreamWriter writer = File.CreateText( filePath ) ) { 
                     writer.Write( fileContent );
                     }
                 }
             catch ( UnauthorizedAccessException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -306,7 +286,7 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -317,7 +297,7 @@ namespace WebCrawler
             catch ( ArgumentException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -328,7 +308,7 @@ namespace WebCrawler
             catch ( PathTooLongException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -339,7 +319,7 @@ namespace WebCrawler
             catch ( DirectoryNotFoundException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -350,7 +330,7 @@ namespace WebCrawler
             catch ( NotSupportedException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -361,7 +341,7 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -372,7 +352,7 @@ namespace WebCrawler
             catch ( IOException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -383,7 +363,7 @@ namespace WebCrawler
             catch ( Exception x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = path.ToString();
+                lastExceptionInfo.argument = filePath.ToString();
                 lastExceptionInfo.causeEvent = "Saving the text content into a file.";
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[FSF-4]";
@@ -418,14 +398,99 @@ namespace WebCrawler
         public static string createRootDirectory()
             {
             string path = null;
-            string rootDirectoryName = Path.GetDirectoryName( getApplicationFullPath() );
-            string rootDirectory = Path.Combine( rootDirectoryName, ROOT_DIRECTORY_NAME );
+            string rootDirectoryName = string.Empty;
 
-            if ( createDirectory( rootDirectory ) == true ) {
-                path = rootDirectory;
+            try {
+                rootDirectoryName = Path.GetDirectoryName( getApplicationFullPath() );
+                string rootDirectory = Path.Combine( rootDirectoryName, ROOT_DIRECTORY_NAME );
+
+                if ( createDirectory( rootDirectory ) == true ) {
+                    path = rootDirectory;
+                    }
+                }
+            catch ( ArgumentNullException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = rootDirectoryName.ToString();
+                lastExceptionInfo.causeEvent = "Creating a root directory.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = rootDirectoryName.ToString();
+                lastExceptionInfo.causeEvent = "Creating a root directory.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( PathTooLongException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = rootDirectoryName.ToString();
+                lastExceptionInfo.causeEvent = "Creating a root directory.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = rootDirectoryName.ToString();
+                lastExceptionInfo.causeEvent = "Creating a root directory.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-6]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
                 }
 
-            return ( rootDirectory );
+            return ( path );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Limits a length of the passed argument to the number of specified characters starting from the beginning.
+        /// </summary>
+        /// <param name="length">A length that the given text should have.</param>
+        /// <param name="text">A text data to limit.</param>
+        /// <returns>A substring from the beginning to the specified number of length.</returns>
+
+        public static string limitCharactersToFirst( int length, string text )
+            {
+            string qualifiedText = string.Empty;
+
+            try {
+                int textLength = text.Length;
+                qualifiedText = text.Substring( 0, (length > textLength - 1) ? (textLength) : (length) );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = length.ToString();
+                lastExceptionInfo.causeEvent = "Substringing a text.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argument = length.ToString();
+                lastExceptionInfo.causeEvent = "Substringing a text.";
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[FSF-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+
+            return ( qualifiedText );
             }
 
         //______________________________________________________________________________________________________________________________

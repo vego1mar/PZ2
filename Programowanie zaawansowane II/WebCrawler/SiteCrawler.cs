@@ -11,12 +11,33 @@ namespace WebCrawler
     internal class SiteCrawler
         {
 
+        internal const string CRAWLED_WEBSITES_FILE_EXTENSION = "html";
+
         private string siteURL;
         private string probedSiteContent;
 
         private uint levelOfDepth;
         private bool useAsynchronousDownload;
         private StdErrFlow.ExceptionInfo lastExceptionInfo;
+
+
+        //______________________________________________________________________________________________________________________________
+
+        public class SiteCrawlerEventArgs : EventArgs
+            {
+            private int numberOfFoundedLinks = 0;
+
+            public SiteCrawlerEventArgs( int linksFounded ) {
+                this.numberOfFoundedLinks = linksFounded;
+                }
+
+            public int geNumberOfFoundedLinks() {
+                return ( this.numberOfFoundedLinks );
+                }
+            }
+
+        public delegate void SiteCrawlerEventHandler( object source, SiteCrawlerEventArgs e );
+        public event SiteCrawlerEventHandler NewSetOfLinksFounded;
 
         //______________________________________________________________________________________________________________________________
 
@@ -294,14 +315,13 @@ namespace WebCrawler
             {
             string mainSiteURL = this.getSiteURL();
 
-            if ( mainSiteURL != string.Empty ) {
-                string rootDirectoryName = FileSystemFlow.createRootDirectory();
-                ISet<string> absoluteLinks0 = this.performBasicCrawlingStep( mainSiteURL, rootDirectoryName );
-                this.performLevelCrawlingStep( absoluteLinks0, rootDirectoryName, 1 );
+            if ( mainSiteURL == string.Empty ) {
+                throw ( new ArgumentNullException( mainSiteURL.GetType().Name, "The website URL is empty." ) );
                 }
-            else {
-                throw ( new ArgumentNullException( "mainSiteURL", "The website URL is empty." ) );
-                }
+
+            string mainSiteDirectoryName = this.determineQualifiedPath( FileSystemFlow.createRootDirectory(), mainSiteURL );
+            ISet<string> absoluteLinks0 = this.performBasicCrawlingStep( mainSiteURL, mainSiteDirectoryName );
+            this.performLevelCrawlingStep( absoluteLinks0, mainSiteDirectoryName, 1 );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -317,6 +337,10 @@ namespace WebCrawler
             {
             if ( levelOfDepthEntry > this.getLevelOfDepth() ) {
                 return;
+                }
+
+            if ( levelOfDepthEntry == this.getLevelOfDepth() ) {
+                this.NewSetOfLinksFounded?.Invoke( this, new SiteCrawlerEventArgs( absoluteLinks0.Count ) );
                 }
 
             try {
@@ -392,12 +416,10 @@ namespace WebCrawler
                 websiteContent = this.downloadWebsiteContent( url );
                 }
 
-            FileSystemFlow.createDirectory( directoryName );
-            string fileName = FileSystemFlow.removeWindowsFileSystemReservedCharacters( url );
-            string fileNameWithExtension = string.Concat( fileName, ".html" );
-
             if ( websiteContent != string.Empty ) {
-                FileSystemFlow.saveTextToFile( directoryName, fileNameWithExtension, websiteContent );
+                FileSystemFlow.createDirectory( directoryName );
+                string filePath = this.determineQualifiedPath( directoryName, url + "." + CRAWLED_WEBSITES_FILE_EXTENSION );
+                FileSystemFlow.saveTextToFile( filePath, websiteContent );
                 }
 
             ISet<string> absoluteLinks = this.extractAbsoluteLinksFrom( websiteContent );
@@ -567,6 +589,79 @@ namespace WebCrawler
                 }
 
             return ( websiteContent );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Determines a qualified path. 
+        /// Qualified means without reserved to the Windows file system characters and with the proper length. 
+        /// If a combined path would be too long, the website URL name will be trimmed from the left side.
+        /// </summary>
+        /// <param name="directoryName">A directory name of the target destination location.</param>
+        /// <param name="websiteURL">An untrusted name.</param>
+        /// <returns>The Windows operating system qualified directory path.</returns>
+
+        private string determineQualifiedPath( string directoryName, string websiteURL )
+            {
+            string qualifiedLengthPath = string.Empty;
+            string mainSiteDirectoryName = string.Empty;
+
+            try {
+                string websiteName = FileSystemFlow.removeWindowsFileSystemReservedCharacters( websiteURL.Substring( websiteURL.IndexOf( '.' ) + 1 ) );
+                websiteName = FileSystemFlow.limitCharactersToFirst( FileSystemFlow.WINDOWS_QUALIFIED_FILENAME_LENGTH - 1, websiteName );
+                mainSiteDirectoryName = System.IO.Path.Combine( directoryName, websiteName );
+
+                if ( mainSiteDirectoryName.Length > (FileSystemFlow.WINDOWS_QUALIFIED_DIRECTORY_LENGTH - 1) ) {
+                    int trimmingSize = mainSiteDirectoryName.Length - FileSystemFlow.WINDOWS_QUALIFIED_DIRECTORY_LENGTH;
+                    websiteName = websiteName.Substring( trimmingSize + 1 );
+                    mainSiteDirectoryName = System.IO.Path.Combine( directoryName, websiteName );
+                    }
+
+                qualifiedLengthPath = mainSiteDirectoryName;
+                }
+            catch ( ArgumentNullException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
+                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
+                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
+                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
+                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-5]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+
+            return ( qualifiedLengthPath );
             }
 
         //______________________________________________________________________________________________________________________________

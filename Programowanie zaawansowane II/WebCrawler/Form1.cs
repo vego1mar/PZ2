@@ -17,6 +17,8 @@ namespace WebCrawler
         private volatile bool timerDeadFlag;
 
         private ulong foundedLinksNumber;
+        private System.Globalization.NumberFormatInfo numberFormatInfo;
+
         private StdErrFlow.ExceptionInfo lastExceptionInfo;
 
         //______________________________________________________________________________________________________________________________
@@ -32,6 +34,61 @@ namespace WebCrawler
             this.timerThread = null;
             this.timerDeadFlag = true;
             this.foundedLinksNumber = 0;
+
+            try {
+                this.numberFormatInfo = new System.Globalization.CultureInfo( "en-US", true ).NumberFormat;
+                this.numberFormatInfo.NumberDecimalDigits = 0;
+                }
+            catch ( ArgumentNullException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
+                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-8]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
+                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-8]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( System.Globalization.CultureNotFoundException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
+                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-8]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( InvalidOperationException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
+                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-8]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
+                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-8]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -94,6 +151,7 @@ namespace WebCrawler
             if ( websiteContent == string.Empty ) {
                 StdErrFlow.ExceptionInfo exception = site.getLastExceptionInfo();
                 this.setCurrentStateToUpdateLabelText( exception.typeName + " caused by the typed URL" );
+                MessageBox.Show( this, exception.message, "Establishing connection failed" );
                 this.enableMainWindowControls();
                 return;
                 }
@@ -107,6 +165,12 @@ namespace WebCrawler
                     crawler.setLevelOfDepth( this.gainLevelOfDepthSpinnerValue() );
                     crawler.setSiteURL( this.websiteURLTextBox.Text );
                     crawler.setAsynchronousDownloadUse( this.asynchronousWebsitesDownloadCheckBox.Checked );
+
+                    crawler.NewSetOfLinksFounded += ( object senderObj, SiteCrawler.SiteCrawlerEventArgs eventArgs ) => {
+                        this.foundedLinksNumber += uint.Parse( Math.Abs(eventArgs.geNumberOfFoundedLinks()).ToString() );
+                        this.foundedLinksNumberUpdate();
+                        };
+
                     crawler.crawlThroughSite();
                     },
                     TaskCreationOptions.LongRunning
@@ -122,6 +186,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( ObjectDisposedException x ) {
@@ -134,6 +199,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( ArgumentOutOfRangeException x ) {
@@ -146,6 +212,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( Exception x ) {
@@ -158,6 +225,7 @@ namespace WebCrawler
                 StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
                 StdErrFlow.writeLine( Environment.NewLine );
                 this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
 
@@ -244,16 +312,14 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// Updates the 'foundedLinksNumber' field by adding to it the parameter and refreshing the 'foundedLinksToUpdateLabel' UI component.
+        /// Updates the 'foundedLinksNumber' field by refreshing the 'foundedLinksToUpdateLabel' UI component with a current value.
         /// </summary>
-        /// <param name="numberOfLinks">A number to add to the 'foundedLinksNumber' field.</param>
 
-        private void foundedLinksNumberUpdate( uint numberOfLinks )
+        private void foundedLinksNumberUpdate()
             {
             try {
                 this.BeginInvoke( ( MethodInvoker ) delegate {
-                    this.foundedLinksNumber += numberOfLinks;
-                    this.foundedLinksToUpdateLabel.Text = this.foundedLinksNumber.ToString();
+                    this.foundedLinksToUpdateLabel.Text = this.foundedLinksNumber.ToString( "N", this.numberFormatInfo );
                     this.foundedLinksToUpdateLabel.Refresh();
                     });
                 }
@@ -268,6 +334,16 @@ namespace WebCrawler
                 StdErrFlow.writeLine( Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argument = "foundedLinksNumber";
+                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-3]";
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
+                StdErrFlow.writeLine( Environment.NewLine );
+                }
+            catch ( FormatException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
                 this.lastExceptionInfo.argument = "foundedLinksNumber";
@@ -300,9 +376,9 @@ namespace WebCrawler
         private void InfoButton_Click( object sender, EventArgs e )
             {
             // TASK: change the info
-            // TASK: foundedLinksNumber functionality (event on the SiteCrawler side)
             // TASK: see errors log UI functionality
-            // TASK: subdirectory with the main site name
+            // TASK: simplify ExceptionInfo fields
+            // TASK: remove await on a Task in proceedButton_Click()
 
             string newLine = Environment.NewLine;
             string usedFramework = typeof( string ).Assembly.ImageRuntimeVersion;
@@ -488,7 +564,7 @@ namespace WebCrawler
 
                 while ( this.timerDeadFlag == false ) {
                     // This loop may consume most of the CPU time.
-                    Thread.Sleep( 900 );
+                    Thread.Sleep( 750 );
                     }
 
                 timer.Enabled = false;
