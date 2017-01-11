@@ -43,8 +43,12 @@
             this.timerStartRadioButton = new System.Windows.Forms.RadioButton();
             this.timerStopRadioButton = new System.Windows.Forms.RadioButton();
             this.timerGroupBox = new System.Windows.Forms.GroupBox();
+            this.threadsPerDepthEntrySpinner = new System.Windows.Forms.NumericUpDown();
+            this.threadsPerDepthEntryLabel = new System.Windows.Forms.Label();
+            this.errorLogButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.levelOfDepthSpinner)).BeginInit();
             this.timerGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.threadsPerDepthEntrySpinner)).BeginInit();
             this.SuspendLayout();
             // 
             // websiteURLLabel
@@ -70,7 +74,7 @@
             // 
             this.levelOfDepthLabel.AutoSize = true;
             this.levelOfDepthLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.levelOfDepthLabel.Location = new System.Drawing.Point(22, 138);
+            this.levelOfDepthLabel.Location = new System.Drawing.Point(22, 107);
             this.levelOfDepthLabel.Name = "levelOfDepthLabel";
             this.levelOfDepthLabel.Size = new System.Drawing.Size(93, 13);
             this.levelOfDepthLabel.TabIndex = 4;
@@ -157,7 +161,7 @@
             // 
             this.levelOfDepthSpinner.BackColor = System.Drawing.SystemColors.HighlightText;
             this.levelOfDepthSpinner.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.levelOfDepthSpinner.Location = new System.Drawing.Point(25, 169);
+            this.levelOfDepthSpinner.Location = new System.Drawing.Point(25, 126);
             this.levelOfDepthSpinner.Maximum = new decimal(new int[] {
             -2,
             0,
@@ -218,12 +222,56 @@
             // 
             this.timerGroupBox.Controls.Add(this.timerStartRadioButton);
             this.timerGroupBox.Controls.Add(this.timerStopRadioButton);
-            this.timerGroupBox.Location = new System.Drawing.Point(156, 107);
+            this.timerGroupBox.Location = new System.Drawing.Point(181, 107);
             this.timerGroupBox.Name = "timerGroupBox";
             this.timerGroupBox.Size = new System.Drawing.Size(152, 44);
             this.timerGroupBox.TabIndex = 14;
             this.timerGroupBox.TabStop = false;
             this.timerGroupBox.Text = "Timer control";
+            // 
+            // threadsPerDepthEntrySpinner
+            // 
+            this.threadsPerDepthEntrySpinner.Location = new System.Drawing.Point(25, 188);
+            this.threadsPerDepthEntrySpinner.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+            this.threadsPerDepthEntrySpinner.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.threadsPerDepthEntrySpinner.Name = "threadsPerDepthEntrySpinner";
+            this.threadsPerDepthEntrySpinner.Size = new System.Drawing.Size(104, 20);
+            this.threadsPerDepthEntrySpinner.TabIndex = 15;
+            this.threadsPerDepthEntrySpinner.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.threadsPerDepthEntrySpinner.ThousandsSeparator = true;
+            this.threadsPerDepthEntrySpinner.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // threadsPerDepthEntryLabel
+            // 
+            this.threadsPerDepthEntryLabel.AutoSize = true;
+            this.threadsPerDepthEntryLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.threadsPerDepthEntryLabel.Location = new System.Drawing.Point(22, 169);
+            this.threadsPerDepthEntryLabel.Name = "threadsPerDepthEntryLabel";
+            this.threadsPerDepthEntryLabel.Size = new System.Drawing.Size(147, 13);
+            this.threadsPerDepthEntryLabel.TabIndex = 16;
+            this.threadsPerDepthEntryLabel.Text = "Threads per depth entry:";
+            // 
+            // errorLogButton
+            // 
+            this.errorLogButton.Location = new System.Drawing.Point(330, 258);
+            this.errorLogButton.Name = "errorLogButton";
+            this.errorLogButton.Size = new System.Drawing.Size(75, 23);
+            this.errorLogButton.TabIndex = 17;
+            this.errorLogButton.Text = "Error log";
+            this.errorLogButton.UseVisualStyleBackColor = true;
+            this.errorLogButton.Click += new System.EventHandler(this.errorLogButton_Click);
             // 
             // MainWindow
             // 
@@ -231,6 +279,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
             this.ClientSize = new System.Drawing.Size(550, 302);
+            this.Controls.Add(this.errorLogButton);
+            this.Controls.Add(this.threadsPerDepthEntryLabel);
+            this.Controls.Add(this.threadsPerDepthEntrySpinner);
             this.Controls.Add(this.timerGroupBox);
             this.Controls.Add(this.asynchronousWebsitesDownloadCheckBox);
             this.Controls.Add(this.levelOfDepthSpinner);
@@ -254,6 +305,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.levelOfDepthSpinner)).EndInit();
             this.timerGroupBox.ResumeLayout(false);
             this.timerGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.threadsPerDepthEntrySpinner)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -275,6 +327,9 @@
         private System.Windows.Forms.RadioButton timerStartRadioButton;
         private System.Windows.Forms.RadioButton timerStopRadioButton;
         private System.Windows.Forms.GroupBox timerGroupBox;
+        private System.Windows.Forms.NumericUpDown threadsPerDepthEntrySpinner;
+        private System.Windows.Forms.Label threadsPerDepthEntryLabel;
+        private System.Windows.Forms.Button errorLogButton;
         }
     }
 

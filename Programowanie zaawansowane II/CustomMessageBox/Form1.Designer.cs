@@ -34,7 +34,7 @@
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(567, 233);
+            this.okButton.Location = new System.Drawing.Point(776, 432);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 1;
@@ -51,7 +51,7 @@
             this.messageTextBox.Name = "messageTextBox";
             this.messageTextBox.ReadOnly = true;
             this.messageTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.messageTextBox.Size = new System.Drawing.Size(630, 210);
+            this.messageTextBox.Size = new System.Drawing.Size(832, 416);
             this.messageTextBox.TabIndex = 2;
             this.messageTextBox.Text = "messageTextBox";
             this.messageTextBox.WordWrap = false;
@@ -61,9 +61,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(654, 265);
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ClientSize = new System.Drawing.Size(854, 457);
             this.Controls.Add(this.messageTextBox);
             this.Controls.Add(this.okButton);
+            this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

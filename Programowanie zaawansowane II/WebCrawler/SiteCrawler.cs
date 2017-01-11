@@ -19,6 +19,7 @@ namespace WebCrawler
         private uint levelOfDepth;
         private bool useAsynchronousDownload;
         private StdErrFlow.ExceptionInfo lastExceptionInfo;
+        private int maximumRunningTasksPerDepthEntry;
 
 
         //______________________________________________________________________________________________________________________________
@@ -54,10 +55,12 @@ namespace WebCrawler
 
             this.lastExceptionInfo.typeName = string.Empty;
             this.lastExceptionInfo.methodName = string.Empty;
-            this.lastExceptionInfo.argument = string.Empty;
-            this.lastExceptionInfo.causeEvent = string.Empty;
+            this.lastExceptionInfo.argName = string.Empty;
+            this.lastExceptionInfo.argValue = string.Empty;
             this.lastExceptionInfo.message = string.Empty;
             this.lastExceptionInfo.id = string.Empty;
+
+            this.maximumRunningTasksPerDepthEntry = 5;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -202,56 +205,56 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Probing the network connection.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 return ( false );
                 }
             catch ( ArgumentException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Probing the network connection.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 return ( false );
                 }
             catch ( System.Net.WebException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Probing the network connection.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 return ( false );
                 }
             catch ( NotSupportedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Probing the network connection.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 return ( false );
                 }            
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Probing the network connection.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 return ( false );
                 }
 
@@ -345,51 +348,85 @@ namespace WebCrawler
 
             try {
                 // foreach ( var urlEntry in absoluteLinks0 ) {
-                System.Threading.Tasks.Parallel.ForEach( absoluteLinks0, urlEntry => {
-                    string directoryName = System.IO.Path.Combine( rootDirectoryName, "lvl_" + levelOfDepthEntry.ToString() );
-                    ISet<string> absoluteLinks1 = this.performBasicCrawlingStep( urlEntry, directoryName );
-                    this.performLevelCrawlingStep( absoluteLinks1, rootDirectoryName, levelOfDepthEntry + 1 );
-                    });
+                System.Threading.Tasks.Parallel.ForEach( 
+                    absoluteLinks0, 
+                    new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = this.getMaximumRunningTasksPerDepthEntry() }, 
+                    urlEntry => {
+                        string directoryName = System.IO.Path.Combine( rootDirectoryName, "lvl_" + levelOfDepthEntry.ToString() );
+                        ISet<string> absoluteLinks1 = this.performBasicCrawlingStep( urlEntry, directoryName );
+                        this.performLevelCrawlingStep( absoluteLinks1, rootDirectoryName, levelOfDepthEntry + 1 );
+                        }
+                    );
                 }
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "ISet<string> absoluteLinks0.Count = " + absoluteLinks0.Count;
-                this.lastExceptionInfo.causeEvent = "Performing the recursive crawling step model.";
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-3]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "ISet<string> absoluteLinks0.Count = " + absoluteLinks0.Count;
-                this.lastExceptionInfo.causeEvent = "Performing the recursive crawling step model.";
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( AggregateException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "ISet<string> absoluteLinks0.Count = " + absoluteLinks0.Count;
-                this.lastExceptionInfo.causeEvent = "Performing the recursive crawling step model.";
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+            catch ( OperationCanceledException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-3]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+            catch ( ObjectDisposedException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[SC-3]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "ISet<string> absoluteLinks0.Count = " + absoluteLinks0.Count;
-                this.lastExceptionInfo.causeEvent = "Performing the recursive crawling step model.";
+                this.lastExceptionInfo.argName = absoluteLinks0.GetType().Name + ".Count";
+                this.lastExceptionInfo.argValue = absoluteLinks0.Count.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -459,42 +496,42 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( NotSupportedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( System.Net.WebException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
 
             return ( websiteContent );
@@ -540,52 +577,52 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( UriFormatException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( System.Net.WebException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( System.Reflection.TargetInvocationException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = url.ToString();
-                this.lastExceptionInfo.causeEvent = "Downloading the website content asynchronously using given URL.";
+                this.lastExceptionInfo.argName = url.GetType().FullName + "~" + nameof( url );
+                this.lastExceptionInfo.argValue = url.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
 
             return ( websiteContent );
@@ -623,45 +660,75 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
-                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.argName = mainSiteDirectoryName.GetType().FullName + "~" + nameof( mainSiteDirectoryName );
+                this.lastExceptionInfo.argValue = mainSiteDirectoryName.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
-                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.argName = mainSiteDirectoryName.GetType().FullName + "~" + nameof( mainSiteDirectoryName );
+                this.lastExceptionInfo.argValue = mainSiteDirectoryName.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
-                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.argName = mainSiteDirectoryName.GetType().FullName + "~" + nameof( mainSiteDirectoryName );
+                this.lastExceptionInfo.argValue = mainSiteDirectoryName.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = mainSiteDirectoryName.ToString();
-                this.lastExceptionInfo.causeEvent = "Determining a qualified path for the Windows file system.";
+                this.lastExceptionInfo.argName = mainSiteDirectoryName.GetType().FullName + "~" + nameof( mainSiteDirectoryName );
+                this.lastExceptionInfo.argValue = mainSiteDirectoryName.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[SC-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
 
             return ( qualifiedLengthPath );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Setter.
+        /// </summary>
+        /// <param name="numberOfThreads">A number of maximum concurrently executed tasks for each depth entry in the recursive crawling procedure.</param>
+        /// <returns>'true' if field has been modified, 'false' otherwise.</returns>
+
+        public bool setMaximumRunningTasksPerDepthEntry( int numberOfThreads )
+            {
+            if ( numberOfThreads < -1 ) {
+                return ( false );
+                }
+
+            this.maximumRunningTasksPerDepthEntry = numberOfThreads;
+            return ( true );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Getter.
+        /// </summary>
+        /// <returns>The current content of the name corresponding field of the used object.</returns>
+
+        public int getMaximumRunningTasksPerDepthEntry()
+            {
+            return ( this.maximumRunningTasksPerDepthEntry );
             }
 
         //______________________________________________________________________________________________________________________________
@@ -678,6 +745,7 @@ namespace WebCrawler
             sc.setLevelOfDepth( 2 );
             sc.setSiteURL( "http://www.a.pl" );
             sc.setAsynchronousDownloadUse( false );
+            sc.setMaximumRunningTasksPerDepthEntry( 5 );
 
             try {
                 sc.crawlThroughSite();

@@ -42,52 +42,52 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
-                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.argName = numberFormatInfo.GetType().FullName + "~" + nameof( numberFormatInfo );
+                this.lastExceptionInfo.argValue = numberFormatInfo.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-8]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
-                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.argName = numberFormatInfo.GetType().FullName + "~" + nameof( numberFormatInfo );
+                this.lastExceptionInfo.argValue = numberFormatInfo.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-8]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( System.Globalization.CultureNotFoundException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
-                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.argName = numberFormatInfo.GetType().FullName + "~" + nameof( numberFormatInfo );
+                this.lastExceptionInfo.argValue = numberFormatInfo.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-8]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
-                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.argName = numberFormatInfo.GetType().FullName + "~" + nameof( numberFormatInfo );
+                this.lastExceptionInfo.argValue = numberFormatInfo.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-8]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = numberFormatInfo.GetType().Name;
-                this.lastExceptionInfo.causeEvent = "Getting the CultureInfo.";
+                this.lastExceptionInfo.argName = numberFormatInfo.GetType().FullName + "~" + nameof( numberFormatInfo );
+                this.lastExceptionInfo.argValue = numberFormatInfo.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-8]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -165,13 +165,18 @@ namespace WebCrawler
                     crawler.setLevelOfDepth( this.gainLevelOfDepthSpinnerValue() );
                     crawler.setSiteURL( this.websiteURLTextBox.Text );
                     crawler.setAsynchronousDownloadUse( this.asynchronousWebsitesDownloadCheckBox.Checked );
+                    int threadsPerDepthEntryValue = this.gainThreadsPerDepthEntryValue();
 
-                    crawler.NewSetOfLinksFounded += ( object senderObj, SiteCrawler.SiteCrawlerEventArgs eventArgs ) => {
-                        this.foundedLinksNumber += uint.Parse( Math.Abs(eventArgs.geNumberOfFoundedLinks()).ToString() );
-                        this.foundedLinksNumberUpdate();
-                        };
+                    if ( threadsPerDepthEntryValue != 0 ) {
+                        crawler.setMaximumRunningTasksPerDepthEntry( threadsPerDepthEntryValue );
 
-                    crawler.crawlThroughSite();
+                        crawler.NewSetOfLinksFounded += ( object senderObj, SiteCrawler.SiteCrawlerEventArgs eventArgs ) => {
+                            this.foundedLinksNumber += uint.Parse( Math.Abs(eventArgs.geNumberOfFoundedLinks()).ToString() );
+                            this.foundedLinksNumberUpdate();
+                            };
+
+                        crawler.crawlThroughSite();
+                        }
                     },
                     TaskCreationOptions.LongRunning
                     );
@@ -179,52 +184,56 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
-                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.argName = this.websiteURLTextBox.GetType().FullName + "~" + nameof( this.websiteURLTextBox );
+                this.lastExceptionInfo.argValue = this.websiteURLTextBox.Text.ToString();
+                string cause = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
-                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( cause );
                 MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
-                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.argName = this.websiteURLTextBox.GetType().FullName + "~" + nameof( this.websiteURLTextBox );
+                this.lastExceptionInfo.argValue = this.websiteURLTextBox.Text.ToString();
+                string cause = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
-                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( cause );
                 MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
-                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.argName = this.websiteURLTextBox.GetType().FullName + "~" + nameof( this.websiteURLTextBox );
+                this.lastExceptionInfo.argValue = this.websiteURLTextBox.Text.ToString();
+                string cause = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
-                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( cause );
                 MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.websiteURLTextBox.Text.ToString();
-                this.lastExceptionInfo.causeEvent = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
+                this.lastExceptionInfo.argName = this.websiteURLTextBox.GetType().FullName + "~" + nameof( this.websiteURLTextBox );
+                this.lastExceptionInfo.argValue = this.websiteURLTextBox.Text.ToString();
+                string cause = lastExceptionInfo.typeName + " was thrown while awaiting on a Task.";
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-1]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
-                this.setCurrentStateToUpdateLabelText( lastExceptionInfo.causeEvent );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                this.setCurrentStateToUpdateLabelText( cause );
                 MessageBox.Show( this, this.lastExceptionInfo.message, "Task execution abruption" );
                 return;
                 }
@@ -244,7 +253,7 @@ namespace WebCrawler
             this.proceedButton.Enabled = false;
             this.websiteURLTextBox.Enabled = false;
             this.levelOfDepthSpinner.Enabled = false;
-            this.asynchronousWebsitesDownloadCheckBox.Enabled = false;
+            this.threadsPerDepthEntrySpinner.Enabled = false;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -258,7 +267,7 @@ namespace WebCrawler
             this.proceedButton.Enabled = true;
             this.websiteURLTextBox.Enabled = true;
             this.levelOfDepthSpinner.Enabled = true;
-            this.asynchronousWebsitesDownloadCheckBox.Enabled = true;
+            this.threadsPerDepthEntrySpinner.Enabled = true;
             }
 
         //______________________________________________________________________________________________________________________________
@@ -278,32 +287,32 @@ namespace WebCrawler
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
-                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.argName = this.levelOfDepthSpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.levelOfDepthSpinner.Value.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( OverflowException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
-                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.argName = this.levelOfDepthSpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.levelOfDepthSpinner.Value.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = this.levelOfDepthSpinner.Value.ToString();
-                this.lastExceptionInfo.causeEvent = "Retrieving the value from the NumericUpDown component.";
+                this.lastExceptionInfo.argName = this.levelOfDepthSpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.levelOfDepthSpinner.Value.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-2]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
 
             return ( currentValue );
@@ -326,42 +335,42 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "foundedLinksNumber";
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = this.foundedLinksNumber.GetType().FullName + "~" + nameof( this.foundedLinksNumber );
+                this.lastExceptionInfo.argValue = this.foundedLinksNumber.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "foundedLinksNumber";
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = this.foundedLinksNumber.GetType().FullName + "~" + nameof( this.foundedLinksNumber );
+                this.lastExceptionInfo.argValue = this.foundedLinksNumber.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( FormatException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "foundedLinksNumber";
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = this.foundedLinksNumber.GetType().FullName + "~" + nameof( this.foundedLinksNumber );
+                this.lastExceptionInfo.argValue = this.foundedLinksNumber.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = "foundedLinksNumber";
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = this.foundedLinksNumber.GetType().FullName + "~" + nameof( this.foundedLinksNumber );
+                this.lastExceptionInfo.argValue = this.foundedLinksNumber.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-3]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -375,48 +384,44 @@ namespace WebCrawler
 
         private void InfoButton_Click( object sender, EventArgs e )
             {
-            // TASK: change the info
-            // TASK: see errors log UI functionality
-            // TASK: simplify ExceptionInfo fields
-            // TASK: remove await on a Task in proceedButton_Click()
-
             string newLine = Environment.NewLine;
             string usedFramework = typeof( string ).Assembly.ImageRuntimeVersion;
             bool x64Process = Environment.Is64BitProcess;
-            int currentManagedThreadID = Environment.CurrentManagedThreadId;
 
-            string msgBoxText = "A simple web crawler with three levels of searching depth." + newLine +
-                "It establishes only the HTTP connections and looking for only the absolute links (URIs)." + newLine +
+            string msgBoxText = "A simple web crawler using a concurrent recursive model of work." + newLine +
+                "It looking for only the absolute links (URIs)." + newLine +
                 "The downloaded sites content will be saved to the directory of application execution." + newLine +
                 newLine +
-                "----------------------------------------------------------------------------" + newLine +
-                newLine +
-                "IMPORTANT INFORMATION ABOUT PROGRAM WORKFLOW!" + newLine +
-                newLine +
-                "Level 0 means the main page, its links and its content." + newLine +
-                "Level 1 means searching for links in the content of the Level 0." + newLine +
-                "Level 2 means grabbing links from the Level 1 results." + newLine +
-                "Level 3 means processing links from the Level 2 output." + newLine +
-                newLine +
-                "Level 1: main page and links from it will be saved (lvl_0)" + newLine +
-                "Level 2: links from the Level 1 will be saved (lvl_1)" + newLine +
-                "Level 3: links from the Level 2 and Level 3 will be saved (lvl_2, lvl_3)" + newLine +
-                newLine +
-                "Be aware of the Level 2 working effects peculiarity!" + newLine +
-                "Also, please note that only the distinct websites per level will be saved." + newLine +
+                "Only the distinct websites will be saved into files." + newLine +
+                "Also, the website file will not be create if any exception has been raised, so the file must be empty." + newLine +
                 newLine +
                 "----------------------------------------------------------------------------" + newLine +
                 newLine +
-                "StdErr stream redirected: " + StdErrFlow.getLastRedirectionState() + newLine +
+                "Level of depth" + newLine +
+                "Specifies how many recursive entries level will be considered for crawling." + newLine +
+                newLine +
+                "Threads per depth entry" + newLine +
+                "Specifies the maximum number of concurrently executed tasks per recursion entry each." + newLine +
+                newLine +
+                "Founded links" + newLine +
+                "The number of absolute links founded at the deepest recursion entry point. " +
+                "It does not mean the total amount of websites downloaded and saved." + newLine +
+                newLine +
+                "Asynchronous websites download" + newLine +
+                "Check this option to indicate using an asynchronous version of downloading the websites. " +
+                "Please note that it may cause an abnormal behavior at many errors occurence or threads creation." + newLine +
+                newLine +
+                "----------------------------------------------------------------------------" + newLine +
+                newLine +
+                "StdErr stream last redirection status: " + StdErrFlow.getLastRedirectionState() + newLine +
                 "StdErr file name: " + StdErrFlow.STDERR_FILENAME + newLine +
                 "Crawler root directory name: " + FileSystemFlow.ROOT_DIRECTORY_NAME + newLine +
                 newLine +
                 "----------------------------------------------------------------------------" + newLine +
                 newLine +
-                "Application path: " + FileSystemFlow.getApplicationFullPath() + newLine +
+                "Application location: " + FileSystemFlow.getApplicationFullPath() + newLine +
                 ".NET Framework: " + usedFramework + newLine +
                 "64-bit process: " + x64Process + newLine +
-                "Current managed thread ID: " + currentManagedThreadID + newLine +
                 newLine;
 
             CustomMessageBox.CustomMessageBox.ShowBox( msgBoxText, "Information" );
@@ -440,32 +445,32 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = labelText.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = labelText.GetType().FullName + "~" + nameof( labelText );
+                this.lastExceptionInfo.argValue = labelText.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = labelText.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = labelText.GetType().FullName + "~" + nameof( labelText );
+                this.lastExceptionInfo.argValue = labelText.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = labelText.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = labelText.GetType().FullName + "~" + nameof( labelText );
+                this.lastExceptionInfo.argValue = labelText.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-4]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -487,32 +492,32 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = text.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                this.lastExceptionInfo.argValue = text.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( InvalidOperationException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = text.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                this.lastExceptionInfo.argValue = text.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = text.ToString();
-                this.lastExceptionInfo.causeEvent = "Refreshing the UI label asynchronously.";
+                this.lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                this.lastExceptionInfo.argValue = text.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-5]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -595,82 +600,82 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ThreadStateException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( FormatException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( OutOfMemoryException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Starting the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-6]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             }
 
@@ -696,83 +701,144 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentOutOfRangeException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ArgumentException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ThreadStateException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( FormatException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( OutOfMemoryException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( ObjectDisposedException x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
             catch ( Exception x ) {
                 this.lastExceptionInfo.typeName = x.GetType().ToString();
                 this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                this.lastExceptionInfo.argument = e.ToString();
-                this.lastExceptionInfo.causeEvent = "Stopping the UI timer.";
+                this.lastExceptionInfo.argName = e.GetType().FullName + "~" + nameof( e );
+                this.lastExceptionInfo.argValue = e.ToString();
                 this.lastExceptionInfo.message = x.Message;
                 this.lastExceptionInfo.id = "[UI-7]";
-                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") arg=" + lastExceptionInfo.argument );
-                StdErrFlow.writeLine( Environment.NewLine );
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
                 }
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Retrieves the current value of the numeric up-down 'threadsPerDepthEntrySpinner' component.
+        /// </summary>
+        /// <returns>0 if exception has been raised, a value of range [Minimum; Maximum] from the properties otherwise.</returns>
+
+        private int gainThreadsPerDepthEntryValue()
+            {
+            int currentValue = 0;
+
+            try {
+                currentValue = Convert.ToInt32( this.threadsPerDepthEntrySpinner.Value );
+                }
+            catch ( ArgumentOutOfRangeException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = this.threadsPerDepthEntrySpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.threadsPerDepthEntrySpinner.Value.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-9]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+            catch ( OverflowException x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = this.threadsPerDepthEntrySpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.threadsPerDepthEntrySpinner.Value.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-9]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                this.lastExceptionInfo.typeName = x.GetType().ToString();
+                this.lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                this.lastExceptionInfo.argName = this.threadsPerDepthEntrySpinner.GetType().Name + ".Value";
+                this.lastExceptionInfo.argValue = this.threadsPerDepthEntrySpinner.Value.ToString();
+                this.lastExceptionInfo.message = x.Message;
+                this.lastExceptionInfo.id = "[UI-9]";
+                string args = lastExceptionInfo.argName + "=" + lastExceptionInfo.argValue;
+                StdErrFlow.writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ") " + args + Environment.NewLine );
+                }
+
+            return ( currentValue );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// An action performed at the 'Error log' button click.
+        /// </summary>
+        /// <param name="sender">The GUI component that cause the action.</param>
+        /// <param name="e">Arguments of the action related with the GUI sender component.</param>        
+
+        private void errorLogButton_Click( object sender, EventArgs e )
+            {
+            CustomMessageBox.CustomMessageBox.ShowBox( StdErrFlow.getCurrentStdErrLogContent(), "Error log" );
             }
 
         //______________________________________________________________________________________________________________________________

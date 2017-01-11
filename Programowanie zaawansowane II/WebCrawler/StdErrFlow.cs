@@ -19,13 +19,14 @@ namespace WebCrawler
         private static ExceptionInfo lastExceptionInfo;
         private static bool isLastRedirectionSuccessfull = false;
 
+
         //______________________________________________________________________________________________________________________________
 
         public struct ExceptionInfo {
             public string typeName;
             public string methodName;
-            public string argument;
-            public string causeEvent;
+            public string argName;
+            public string argValue;
             public string message;
             public string id;
             }
@@ -33,18 +34,7 @@ namespace WebCrawler
         //______________________________________________________________________________________________________________________________
 
         /// <summary>
-        /// The default constructor. There is no point to instantiate this class.
-        /// </summary>
-
-        private StdErrFlow()
-            {
-            }
-
-        //______________________________________________________________________________________________________________________________
-
-        /// <summary>
         /// It tries to redirect standard error stream into a file whose name is defined in a constant STDERR_FILENAME.
-        /// The file stream is opening for appending.
         /// </summary>
         /// <returns>'true' if function code has been traversed, 'false' when any error occured.</returns>
 
@@ -52,7 +42,7 @@ namespace WebCrawler
             {
             try {
                 oldStdErrStream = Console.Error;
-                newStdErrStream = new StreamWriter( STDERR_FILENAME, true );
+                newStdErrStream = new StreamWriter( STDERR_FILENAME, false );
                 Console.SetError( newStdErrStream );
 
                 if ( newStdErrStream == null ) {
@@ -73,8 +63,8 @@ namespace WebCrawler
             catch ( UnauthorizedAccessException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -85,8 +75,8 @@ namespace WebCrawler
             catch ( NotSupportedException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -97,8 +87,8 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -109,8 +99,8 @@ namespace WebCrawler
             catch ( ArgumentOutOfRangeException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -121,8 +111,8 @@ namespace WebCrawler
             catch ( ArgumentException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -133,8 +123,8 @@ namespace WebCrawler
             catch ( DirectoryNotFoundException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -145,8 +135,8 @@ namespace WebCrawler
             catch ( PathTooLongException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -157,8 +147,8 @@ namespace WebCrawler
             catch ( IOException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -169,8 +159,8 @@ namespace WebCrawler
             catch ( System.Security.SecurityException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -181,8 +171,8 @@ namespace WebCrawler
             catch ( Exception x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = newStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to redirect the StdErr.";
+                lastExceptionInfo.argName = newStdErrStream.GetType().FullName + "~" + nameof( newStdErrStream );
+                lastExceptionInfo.argValue = newStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-2]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -211,8 +201,8 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = text.ToString();
-                lastExceptionInfo.causeEvent = "Writing a line to the StdErr.";
+                lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                lastExceptionInfo.argValue = text.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-1]";
                 return ( false );
@@ -220,8 +210,8 @@ namespace WebCrawler
             catch ( InvalidOperationException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = text.ToString();
-                lastExceptionInfo.causeEvent = "Writing a line to the StdErr.";
+                lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                lastExceptionInfo.argValue = text.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-1]";
                 return ( false );
@@ -229,8 +219,8 @@ namespace WebCrawler
             catch ( IOException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = text.ToString();
-                lastExceptionInfo.causeEvent = "Writing a line to the StdErr.";
+                lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                lastExceptionInfo.argValue = text.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-1]";
                 return ( false );
@@ -238,8 +228,8 @@ namespace WebCrawler
             catch ( Exception x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = text.ToString();
-                lastExceptionInfo.causeEvent = "Writing a line to the StdErr.";
+                lastExceptionInfo.argName = text.GetType().FullName + "~" + nameof( text );
+                lastExceptionInfo.argValue = text.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-1]";
                 return ( false );
@@ -271,8 +261,8 @@ namespace WebCrawler
             catch ( ObjectDisposedException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -283,8 +273,8 @@ namespace WebCrawler
             catch ( ArgumentNullException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -295,8 +285,8 @@ namespace WebCrawler
             catch ( ArgumentException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -307,8 +297,8 @@ namespace WebCrawler
             catch ( System.Security.SecurityException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -319,8 +309,8 @@ namespace WebCrawler
             catch ( IOException x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -331,8 +321,8 @@ namespace WebCrawler
             catch ( Exception x ) {
                 lastExceptionInfo.typeName = x.GetType().ToString();
                 lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
-                lastExceptionInfo.argument = oldStdErrStream.ToString();
-                lastExceptionInfo.causeEvent = "Trying to retrieve the previous StdErr.";
+                lastExceptionInfo.argName = oldStdErrStream.GetType().FullName + "~" + nameof( oldStdErrStream );
+                lastExceptionInfo.argValue = oldStdErrStream.ToString();
                 lastExceptionInfo.message = x.Message;
                 lastExceptionInfo.id = "[SEF-3]";
                 writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
@@ -342,23 +332,6 @@ namespace WebCrawler
                 }
 
             return ( true );
-            }
-
-        //______________________________________________________________________________________________________________________________
-
-        /// <summary>
-        /// Disposes the streams of this flow control class.
-        /// </summary>
-
-        public static void disposeStreams()
-            {
-            if ( oldStdErrStream != null ) {
-                oldStdErrStream.Dispose();
-                }
-
-            if ( newStdErrStream != null ) {
-                newStdErrStream.Dispose();
-                }
             }
 
         //______________________________________________________________________________________________________________________________
@@ -400,6 +373,142 @@ namespace WebCrawler
         public static ExceptionInfo getLastExceptionInfo()
             {
             return ( lastExceptionInfo );
+            }
+
+        //______________________________________________________________________________________________________________________________
+
+        /// <summary>
+        /// Temporarily redirects standard error stream to the previous handle and read the whole of the error log file content.
+        /// </summary>
+        /// <returns>The current content of the error log.</returns>
+
+        public static string getCurrentStdErrLogContent()
+            {
+            string stdErrLogContent = string.Empty;
+
+            try {
+                Console.SetError( oldStdErrStream );
+                newStdErrStream.Close();
+
+                using ( var reader = new StreamReader( STDERR_FILENAME, System.Text.Encoding.UTF8 ) ) {
+                    stdErrLogContent = reader.ReadToEnd();
+                    }
+
+                newStdErrStream = new StreamWriter( STDERR_FILENAME, true );
+                Console.SetError( newStdErrStream );
+                }
+            catch ( ArgumentNullException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( UnauthorizedAccessException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( ArgumentException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( FileNotFoundException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( DirectoryNotFoundException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( OutOfMemoryException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( NotSupportedException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( PathTooLongException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( System.Security.SecurityException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( IOException x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+            catch ( Exception x ) {
+                lastExceptionInfo.typeName = x.GetType().ToString();
+                lastExceptionInfo.methodName = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                lastExceptionInfo.argName = stdErrLogContent.GetType().FullName + "~" + nameof( stdErrLogContent );
+                lastExceptionInfo.argValue = stdErrLogContent.ToString();
+                lastExceptionInfo.message = x.Message;
+                lastExceptionInfo.id = "[SEF-4]";
+                writeLine( lastExceptionInfo.id + " " + x.ToString() + " (" + lastExceptionInfo.methodName + ")" );
+                writeLine( Environment.NewLine );
+                }
+
+            return ( stdErrLogContent );
             }
 
         //______________________________________________________________________________________________________________________________
